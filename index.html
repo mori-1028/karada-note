@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff8fa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="からだノート">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>からだノート</title>
+<style>
+  :root{
+    --bg:#fff8fa;
+    --ink:#3b3540;
+    --ink2:#7a7280;
+    --ink3:#a89fa8;
+    --pink:#e96a91;
+    --pink-deep:#c94b74;
+    --pink-soft:#ffe4ec;
+    --mint:#3fb894;
+    --mint-soft:#dff6ee;
+    --amber:#e8a33d;
+    --line:#f2e7ec;
+    --radius:20px;
+    --safe-b:env(safe-area-inset-bottom, 0px);
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    color:var(--ink);
+    background:var(--bg);
+    background-image:linear-gradient(180deg,#fff8fa 0%,#f6fffb 100%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button,input,textarea{font:inherit;color:inherit;}
+  button{border:0;background:none;cursor:pointer;touch-action:manipulation;}
+  h2{margin:0;}
+  .view[hidden]{display:none;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    padding-top:env(safe-area-inset-top);
+    background:rgba(255,248,250,.82);
+    -webkit-backdrop-filter:saturate(1.4) blur(12px);
+    backdrop-filter:saturate(1.4) blur(12px);
+    border-bottom:1px solid rgba(240,220,228,.7);
+  }
+  .topbar-inner{
+    max-width:520px;margin:0 auto;height:52px;padding:0 18px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;letter-spacing:.05em;color:#4a3b44;}
+  .brand svg{width:22px;height:22px;display:block;}
+  .save-state{font-size:11.5px;color:var(--ink3);transition:color .25s;font-weight:600;}
+  .save-state.on{color:var(--mint);}
+
+  /* ---------- layout ---------- */
+  .main{max-width:520px;margin:0 auto;padding:14px 16px calc(100px + var(--safe-b));}
+  .card{
+    background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px;
+    border:1px solid rgba(246,232,238,.9);
+    box-shadow:0 4px 16px rgba(214,120,150,.07);
+  }
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .card h2{font-size:13.5px;font-weight:700;letter-spacing:.07em;color:#6b5c66;display:flex;align-items:center;gap:7px;}
+  .card h2::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--pink);flex:none;}
+  .card.mint h2::before{background:var(--mint);}
+  .note{font-size:12px;color:var(--ink3);line-height:1.65;margin:8px 0 0;}
+
+  /* ---------- date nav ---------- */
+  .card.datenav{padding:12px 12px 10px;}
+  .datenav-row{display:flex;align-items:center;gap:8px;}
+  .nav-btn{
+    width:46px;height:46px;flex:none;border-radius:14px;background:var(--pink-soft);color:var(--pink-deep);
+    font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;
+    transition:transform .08s ease, background .15s;
+  }
+  .nav-btn:active{transform:scale(.92);background:#ffd3e0;}
+  .date-btn{
+    position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:4px 0;border-radius:12px;
+  }
+  .date-btn .d1{font-size:21px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+  .date-btn .d2{font-size:11.5px;color:var(--ink2);margin-top:1px;}
+  .today-badge{
+    display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--pink);
+    border-radius:999px;padding:1px 7px;margin-left:7px;vertical-align:2px;
+  }
+  #datePicker{
+    position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;margin:0;padding:0;
+    background:transparent;-webkit-appearance:none;appearance:none;font-size:16px;
+  }
+  .datenav-foot{display:flex;justify-content:center;margin-top:6px;height:26px;}
+  .btn-today{
+    font-size:11.5px;font-weight:600;color:var(--ink2);background:#faf5f7;
+    border:1px solid var(--line);border-radius:999px;padding:3px 14px;height:26px;
+  }
+  .btn-today:active{background:#f3e9ed;}
+
+  /* ---------- weight ---------- */
+  .weight-row{display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0 0;}
+  .step-btn{
+    width:54px;height:54px;flex:none;border-radius:50%;background:var(--pink-soft);color:var(--pink-deep);
+    font-size:24px;font-weight:500;display:flex;align-items:center;justify-content:center;
+    transition:transform .08s ease, background .15s;user-select:none;-webkit-user-select:none;
+  }
+  .step-btn:active{transform:scale(.9);background:#ffd0de;}
+  .weight-input-wrap{position:relative;display:flex;align-items:baseline;justify-content:center;flex:1;min-width:0;}
+  #weightInput{
+    width:100%;max-width:150px;text-align:center;border:0;background:transparent;padding:0;
+    font-size:46px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
+    font-variant-numeric:tabular-nums;line-height:1.15;
+  }
+  #weightInput::placeholder{color:#ecdfe4;font-weight:700;}
+  #weightInput:focus{outline:none;}
+  #weightInput::-webkit-outer-spin-button,
+  #weightInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  #weightInput{-moz-appearance:textfield;appearance:textfield;}
+  .unit{font-size:14px;font-weight:700;color:var(--ink3);margin-left:2px;}
+  .card-head .delta{
+    font-size:11.5px;font-weight:700;color:var(--ink2);background:#f7f2f4;
+    padding:4px 10px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .delta.down{color:#1f8a6c;background:var(--mint-soft);}
+  .delta.up{color:#c94b74;background:var(--pink-soft);}
+  .hint{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:4px;min-height:17px;}
+
+  /* ---------- meals ---------- */
+  .meal{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);}
+  .meal:first-of-type{border-top:0;padding-top:0;}
+  .meal:last-of-type{padding-bottom:0;}
+  .meal-side{width:52px;flex:none;display:flex;flex-direction:column;gap:5px;align-items:flex-start;padding-top:9px;}
+  .meal-side .m{font-size:13px;font-weight:700;color:#6b5c66;}
+  .mini{
+    font-size:9.5px;font-weight:700;color:var(--pink-deep);background:var(--pink-soft);
+    border-radius:6px;padding:2px 5px;white-space:nowrap;line-height:1.3;
+  }
+  .mini:active{background:#ffd0de;}
+  .meal textarea{
+    flex:1;min-width:0;min-height:44px;border:1px solid var(--line);background:#fdfbfc;
+    border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.45;resize:none;overflow:hidden;
+  }
+  .meal textarea::placeholder{color:#cfc6cc;font-size:13.5px;}
+  .meal textarea:focus{outline:none;border-color:#f3c2d2;background:#fff;box-shadow:0 0 0 3px rgba(233,106,145,.08);}
+
+  /* ---------- advice ---------- */
+  .card.advice{background:linear-gradient(158deg,#fffdfe 0%,#f4fdf9 100%);border-color:#e4f4ed;}
+  .card.advice h2::before{background:var(--mint);}
+  .advice-lead{font-size:12.8px;font-weight:700;line-height:1.6;color:#3f5a51;margin:0 0 11px;overflow-wrap:anywhere;}
+  .advice-lead .num{color:#1c7a60;font-variant-numeric:tabular-nums;}
+  .nutri-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;}
+  .nutri{
+    display:flex;flex-direction:column;gap:4px;padding:8px 10px 7px;border-radius:13px;
+    background:#f8f5f6;border:1px solid #efe7ea;min-width:0;
+  }
+  .nutri-top{display:flex;align-items:center;gap:5px;min-width:0;}
+  .nutri .ic{font-size:13px;line-height:1;flex:none;}
+  .nutri .nm{font-size:11px;font-weight:700;line-height:1.3;color:var(--ink2);overflow-wrap:anywhere;}
+  .nutri .tg{
+    font-size:9.5px;font-weight:700;line-height:1.3;padding:1px 6px;border-radius:999px;
+    background:#efe9ec;color:#a89fa8;align-self:flex-start;letter-spacing:.02em;
+  }
+  .nutri.on{background:var(--mint-soft);border-color:#b8ebda;}
+  .nutri.on .nm{color:#16705a;}
+  .nutri.on .tg{background:#c6efe2;color:#12634f;}
+  .nutri.off .tg{background:#fdf0dc;color:#a8741c;}
+  .advice-tips{list-style:none;margin:11px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;}
+  .tip{display:flex;gap:8px;padding:9px 11px;border-radius:13px;background:#fff;border:1px solid var(--line);}
+  .tip .ic{font-size:16px;line-height:1.4;flex:none;}
+  .tip .tx{flex:1 1 auto;min-width:0;font-size:12px;line-height:1.62;color:#4a3b44;overflow-wrap:anywhere;}
+  .tip .tx b{font-weight:700;color:var(--pink-deep);}
+  .tip.warn{background:#fff9ef;border-color:#f7e6c9;}
+  .tip.warn .tx b{color:#a8741c;}
+  .tip.care{background:#fff5f9;border-color:#fbdde7;}
+  .advice-empty{
+    font-size:12.5px;line-height:1.7;color:var(--ink2);background:#fff;
+    border-radius:13px;padding:12px 13px;border:1px dashed #dfe9e4;
+  }
+  .advice-legend{font-size:10.5px;line-height:1.65;color:var(--ink3);margin-top:10px;}
+
+  /* ---------- switch ---------- */
+  .switch{position:relative;display:inline-block;width:54px;height:31px;flex:none;}
+  .switch input{position:absolute;opacity:0;width:0;height:0;}
+  .switch .track{position:absolute;inset:0;background:#ece3e8;border-radius:999px;transition:background .2s;}
+  .switch .knob{
+    position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 5px rgba(80,40,55,.18);transition:transform .2s;
+  }
+  .switch input:checked + .track{background:var(--pink);}
+  .switch input:checked + .track .knob{transform:translateX(23px);}
+
+  /* ---------- period ---------- */
+  .flabel{font-size:11.5px;font-weight:700;color:var(--ink2);margin:14px 0 8px;letter-spacing:.03em;}
+  .seg{display:flex;gap:8px;}
+  .seg button{
+    flex:1;min-width:0;height:44px;border-radius:12px;background:#f8f4f6;color:var(--ink2);
+    font-size:14px;font-weight:600;border:1px solid transparent;transition:background .15s,color .15s;
+  }
+  .seg button.on{background:var(--pink-soft);color:var(--pink-deep);border-color:#f6c3d3;font-weight:700;}
+  .seg button:disabled{opacity:.4;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{
+    height:38px;padding:0 14px;border-radius:999px;background:#f8f4f6;color:var(--ink2);
+    font-size:13px;font-weight:600;border:1px solid transparent;transition:background .15s,color .15s;
+  }
+  .chip.on{background:#fff0f5;color:var(--pink-deep);border-color:#f6c3d3;font-weight:700;}
+  .cycle-box{
+    margin-top:15px;border-radius:16px;padding:12px 14px;
+    background:linear-gradient(135deg,#fff5f8 0%,#f1fdf8 100%);
+  }
+  .cycle-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .cycle-day{font-size:12.5px;color:var(--ink2);}
+  .cycle-day b{font-size:23px;font-weight:800;color:var(--pink-deep);font-variant-numeric:tabular-nums;margin:0 2px;}
+  .cycle-avg{font-size:11.5px;color:#6e8a81;font-weight:600;}
+  .cycle-line{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:7px;font-size:12px;color:var(--ink2);}
+  .cycle-line b{color:#4a3b44;font-variant-numeric:tabular-nums;}
+  .cycle-empty{font-size:12px;color:var(--ink2);line-height:1.6;}
+  .start-row{display:flex;gap:8px;align-items:stretch;}
+  .start-row input[type="date"]{
+    flex:1 1 auto;min-width:0;height:46px;border-radius:12px;border:1px solid var(--line);
+    background:#fdfbfc;padding:0 10px;font-size:16px;font-weight:600;color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .start-row input[type="date"]:focus{outline:none;border-color:#f3c2d2;background:#fff;box-shadow:0 0 0 3px rgba(233,106,145,.08);}
+  .start-row input[type="date"]::-webkit-date-and-time-value{text-align:left;}
+  .start-btn{
+    flex:none;min-width:66px;padding:0 14px;height:46px;border-radius:12px;
+    background:var(--pink-soft);color:var(--pink-deep);font-size:13.5px;font-weight:700;
+    border:1px solid #f6c3d3;transition:transform .08s,opacity .15s;
+  }
+  .start-btn:active{transform:scale(.97);}
+  .start-btn:disabled{opacity:.45;}
+  .start-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:9px;}
+  .start-chip{
+    display:inline-flex;align-items:center;gap:2px;height:32px;padding:0 2px 0 11px;
+    border-radius:999px;background:#fff0f5;color:var(--pink-deep);border:1px solid #f6c3d3;
+    font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;
+  }
+  .start-chip .x{
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;line-height:1;color:#c94b74;background:#fff;
+  }
+  .start-chip .x:active{background:var(--pink-soft);}
+  .start-empty{font-size:11px;color:var(--ink3);font-weight:600;}
+  .start-note{font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.5;}
+
+  /* ---------- bowel ---------- */
+  .bowel-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .bowel-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:9px 2px 8px;border-radius:14px;background:#f8f4f6;color:var(--ink2);
+    border:1px solid transparent;transition:background .15s,color .15s;
+  }
+  .bowel-btn .ico{font-size:19px;line-height:1;}
+  .bowel-btn .ico.plain{font-size:15px;font-weight:700;color:#c3b8c0;}
+  .bowel-btn .lb{font-size:10px;font-weight:700;letter-spacing:-.02em;}
+  .bowel-btn.on{background:var(--mint-soft);border-color:#a9e5d2;color:#1c7a60;}
+  .bowel-btn:active{transform:scale(.96);}
+  .bowel-foot{display:flex;align-items:center;gap:9px;margin-top:11px;}
+  .stepper{display:flex;align-items:center;background:#f8f4f6;border-radius:12px;padding:2px;flex:none;}
+  .stepper button{
+    width:36px;height:36px;border-radius:10px;font-size:18px;color:var(--ink2);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stepper button:active{background:#efe7ea;}
+  .stepper .val{min-width:26px;text-align:center;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;}
+  .stepper .lbl{font-size:10px;color:var(--ink3);padding:0 3px 0 1px;}
+  input.memo{
+    flex:1;min-width:0;height:42px;border-radius:12px;border:1px solid var(--line);background:#fdfbfc;
+    padding:0 12px;font-size:16px;
+  }
+  input.memo::placeholder{color:#cfc6cc;font-size:13.5px;}
+  input.memo:focus{outline:none;border-color:#b7e6d6;background:#fff;box-shadow:0 0 0 3px rgba(63,184,148,.09);}
+
+  /* ---------- calendar ---------- */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-title{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .cal-nav{
+    width:40px;height:40px;border-radius:12px;background:#f8f4f6;color:var(--ink2);
+    font-size:19px;display:flex;align-items:center;justify-content:center;
+  }
+  .cal-nav:active{background:#efe7ea;}
+  .cal-week{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+  .cal-week span{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink3);}
+  .cal-week span.sun{color:#df8ba1;}
+  .cal-week span.sat{color:#7fb3ce;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .cal-cell{
+    position:relative;min-height:46px;border-radius:12px;padding:4px 0 3px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;
+    transition:background .15s;
+  }
+  .cal-cell .num{font-weight:600;line-height:1.1;}
+  .cal-cell.other{color:#d8d0d5;}
+  .cal-cell.sun .num{color:#df8ba1;}
+  .cal-cell.sat .num{color:#7fb3ce;}
+  .cal-cell.other.sun .num,.cal-cell.other.sat .num{color:#e3dade;}
+  .cal-cell.today{box-shadow:inset 0 0 0 2px #f3c2d2;}
+  .cal-cell.selected{background:#fff0f5;}
+  .cal-cell.period{background:#ffe0e9;}
+  .cal-cell.period .num{color:var(--pink-deep);font-weight:800;}
+  .cal-cell.predicted{box-shadow:inset 0 0 0 1.5px #f6c3d3;}
+  .cal-cell.ovu{box-shadow:inset 0 0 0 1.5px #a9e5d2;}
+  .cal-cell .dots{display:flex;gap:3px;height:5px;align-items:center;}
+  .dot{width:4px;height:4px;border-radius:50%;display:block;}
+  .dot.w{background:var(--mint);}
+  .dot.b{background:var(--amber);}
+  .legend{display:flex;flex-wrap:wrap;gap:9px 13px;margin-top:13px;font-size:10.5px;color:var(--ink2);}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .lg{width:12px;height:12px;border-radius:4px;display:block;flex:none;}
+  .lg.period{background:#ffe0e9;}
+  .lg.pred{box-shadow:inset 0 0 0 1.5px #f6c3d3;}
+  .lg.ovu{box-shadow:inset 0 0 0 1.5px #a9e5d2;}
+  .lg.w{width:5px;height:5px;border-radius:50%;background:var(--mint);}
+  .lg.b{width:5px;height:5px;border-radius:50%;background:var(--amber);}
+
+  /* ---------- chart ---------- */
+  .chart svg{width:100%;height:auto;display:block;}
+  .chart-empty{
+    padding:26px 10px;text-align:center;font-size:12.5px;color:var(--ink3);
+    background:#fcfafb;border-radius:14px;line-height:1.7;
+  }
+  .chart-caption{font-size:11px;color:var(--ink3);text-align:center;margin-top:6px;font-variant-numeric:tabular-nums;}
+  .seg.small{width:auto;gap:4px;background:#f8f4f6;padding:3px;border-radius:11px;}
+  .seg.small button{flex:none;height:30px;min-width:52px;border-radius:8px;font-size:12px;background:transparent;padding:0 8px;}
+  .seg.small button.on{background:#fff;color:var(--pink-deep);box-shadow:0 1px 3px rgba(190,120,145,.18);border-color:transparent;}
+
+  /* ---------- history ---------- */
+  .history{list-style:none;margin:0;padding:0;}
+  .history li + li{border-top:1px solid var(--line);}
+  .history button{display:flex;gap:10px;width:100%;padding:11px 2px;text-align:left;align-items:flex-start;}
+  .history button:active{background:#fdf8fa;}
+  .hi-date{
+    width:46px;flex:none;font-size:13px;font-weight:800;color:var(--ink);
+    font-variant-numeric:tabular-nums;line-height:1.3;
+  }
+  .hi-date small{display:block;font-size:9.5px;font-weight:600;color:var(--ink3);}
+  .hi-body{flex:1 1 auto;min-width:0;overflow:hidden;}
+  .hi-main{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;}
+  .pill{
+    font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;
+    background:#f6f2f4;color:var(--ink2);white-space:nowrap;
+  }
+  .pill.pink{background:var(--pink-soft);color:var(--pink-deep);}
+  .pill.mint{background:var(--mint-soft);color:#1c7a60;font-variant-numeric:tabular-nums;}
+  .pill.amber{background:#fdf2df;color:#a8741c;}
+  .hi-sub{
+    display:block;max-width:100%;font-size:11px;color:var(--ink3);margin-top:4px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .history-empty{font-size:12.5px;color:var(--ink3);padding:10px 2px;}
+
+  /* ---------- settings ---------- */
+  .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;}
+  .setting-title{font-size:14px;font-weight:700;}
+  .setting-note{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.5;}
+  .num-wrap{display:flex;align-items:center;gap:3px;background:#f8f4f6;border-radius:12px;padding:4px 10px;flex:none;}
+  .num-wrap input{
+    width:46px;border:0;background:transparent;text-align:right;font-size:17px;font-weight:800;
+    font-variant-numeric:tabular-nums;padding:0;
+  }
+  .num-wrap input:focus{outline:none;}
+  .num-wrap input::placeholder{color:#c6bbc2;font-size:13px;font-weight:700;letter-spacing:.02em;}
+  .num-wrap input::-webkit-outer-spin-button,.num-wrap input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .num-wrap span{font-size:11.5px;color:var(--ink3);font-weight:600;}
+  #cycleInput:placeholder-shown + span{display:none;}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:50px;
+    border-radius:14px;background:#f8f4f6;color:var(--ink);font-size:15px;font-weight:700;margin-top:10px;
+    transition:transform .08s;
+  }
+  .btn:active{transform:scale(.99);}
+  .btn.primary{
+    background:linear-gradient(135deg,#f288a6 0%,#e96a91 100%);color:#fff;
+    box-shadow:0 6px 16px rgba(233,106,145,.26);
+  }
+  .btn.danger{background:#fff0ef;color:#c6453f;}
+  .card.danger{border-color:#f8e2e0;}
+  .card.danger h2::before{background:#e07a70;}
+
+  /* ---------- tab bar ---------- */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:rgba(255,255,255,.93);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid rgba(240,225,232,.9);
+    padding-bottom:var(--safe-b);
+  }
+  .tabbar-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);}
+  .tab{
+    display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;
+    color:#b4aab2;font-size:10.5px;font-weight:700;letter-spacing:.03em;
+    transition:color .15s;
+  }
+  .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .tab.on{color:var(--pink);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2s-7.3-4.5-7.3-9.4A4.2 4.2 0 0 1 12 8.1a4.2 4.2 0 0 1 7.3 2.7c0 4.9-7.3 9.4-7.3 9.4z" fill="#fbd6e1" stroke="#e96a91" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      からだノート
+    </div>
+    <div class="save-state" id="saveState">この端末に自動保存</div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- ============ 今日 ============ -->
+  <section class="view" id="view-today">
+    <div class="card datenav">
+      <div class="datenav-row">
+        <button class="nav-btn" id="prevDay" aria-label="前日">‹</button>
+        <div class="date-btn">
+          <div class="d1"><span id="dateLabel">11月18日</span><span class="today-badge" id="todayBadge">今日</span></div>
+          <div class="d2" id="dateWeekday">水曜日</div>
+          <input type="date" id="datePicker" aria-label="日付を選ぶ">
+        </div>
+        <button class="nav-btn" id="nextDay" aria-label="翌日">›</button>
+      </div>
+      <div class="datenav-foot">
+        <button class="btn-today" id="goToday">今日</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>体重</h2>
+        <span class="delta" id="weightDelta"></span>
+      </div>
+      <div class="weight-row">
+        <button class="step-btn" data-step="-0.1" aria-label="0.1kg減らす">−</button>
+        <div class="weight-input-wrap">
+          <input id="weightInput" type="number" inputmode="decimal" step="0.1" min="0" max="300" placeholder="--.-" aria-label="体重（kg）">
+          <span class="unit">kg</span>
+        </div>
+        <button class="step-btn" data-step="0.1" aria-label="0.1kg増やす">＋</button>
+      </div>
+      <div class="hint" id="weightHint"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>食事</h2>
+      </div>
+      <div class="meal">
+        <div class="meal-side"><span class="m">朝</span><button class="mini" data-copy="breakfast">前回と同じ</button></div>
+        <textarea data-meal="breakfast" rows="1" placeholder="例：トースト・ヨーグルト・コーヒー"></textarea>
+      </div>
+      <div class="meal">
+        <div class="meal-side"><span class="m">昼</span><button class="mini" data-copy="lunch">前回と同じ</button></div>
+        <textarea data-meal="lunch" rows="1" placeholder="例：お弁当・サラダ"></textarea>
+      </div>
+      <div class="meal">
+        <div class="meal-side"><span class="m">夜</span><button class="mini" data-copy="dinner">前回と同じ</button></div>
+        <textarea data-meal="dinner" rows="1" placeholder="例：魚・味噌汁・ごはん少なめ"></textarea>
+      </div>
+      <div class="meal">
+        <div class="meal-side"><span class="m">間食</span><button class="mini" data-copy="snack">前回と同じ</button></div>
+        <textarea data-meal="snack" rows="1" placeholder="例：チョコ2粒"></textarea>
+      </div>
+    </section>
+
+    <section class="card advice" id="adviceCard">
+      <div class="card-head">
+        <h2>今日のサポート</h2>
+      </div>
+      <div id="adviceBody"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>生理周期</h2>
+        <label class="switch">
+          <input type="checkbox" id="periodToggle" aria-label="生理中">
+          <span class="track"><span class="knob"></span></span>
+        </label>
+      </div>
+      <div class="flabel">経血量</div>
+      <div class="seg" id="flowSeg">
+        <button type="button" data-flow="light">少</button>
+        <button type="button" data-flow="normal">普通</button>
+        <button type="button" data-flow="heavy">多</button>
+      </div>
+      <div class="flabel">体調メモ</div>
+      <div class="chips" id="symptomChips"></div>
+      <div class="flabel">生理が始まった日</div>
+      <div class="start-row">
+        <input type="date" id="periodStartInput" aria-label="生理が始まった日">
+        <button type="button" class="start-btn" id="periodStartBtn">記録</button>
+      </div>
+      <div class="start-chips" id="periodStartChips"></div>
+      <div class="start-note">過去の日付も入れると、平均周期が正確になります。</div>
+      <div class="cycle-box" id="cycleBox"></div>
+    </section>
+
+    <section class="card mint">
+      <div class="card-head">
+        <h2>便通</h2>
+      </div>
+      <div class="bowel-grid" id="bowelGrid"></div>
+      <div class="bowel-foot">
+        <div class="stepper">
+          <span class="lbl">回数</span>
+          <button type="button" id="bowelMinus" aria-label="回数を減らす">−</button>
+          <span class="val" id="bowelCount">0</span>
+          <button type="button" id="bowelPlus" aria-label="回数を増やす">＋</button>
+        </div>
+        <input type="text" class="memo" id="bowelMemo" placeholder="メモ（任意）" aria-label="便通のメモ">
+      </div>
+    </section>
+  </section>
+
+  <!-- ============ カレンダー ============ -->
+  <section class="view" id="view-calendar" hidden>
+    <div class="card">
+      <div class="cal-head">
+        <button class="cal-nav" id="calPrev" aria-label="前の月">‹</button>
+        <div class="cal-title" id="calTitle">2026年11月</div>
+        <button class="cal-nav" id="calNext" aria-label="次の月">›</button>
+      </div>
+      <div class="cal-week">
+        <span class="sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="sat">土</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="legend">
+        <span><i class="lg period"></i>生理</span>
+        <span><i class="lg pred"></i>生理予定</span>
+        <span><i class="lg ovu"></i>排卵日（推定）</span>
+        <span><i class="lg w"></i>体重</span>
+        <span><i class="lg b"></i>便通</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>体重の推移</h2>
+        <div class="seg small" id="rangeSeg">
+          <button type="button" data-range="14" class="on">14日</button>
+          <button type="button" data-range="30">30日</button>
+        </div>
+      </div>
+      <div class="chart" id="chartWrap"></div>
+      <div class="chart-caption" id="chartCaption"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>最近の記録</h2>
+      </div>
+      <ul class="history" id="historyList"></ul>
+    </div>
+  </section>
+
+  <!-- ============ 設定・バックアップ ============ -->
+  <section class="view" id="view-settings" hidden>
+    <div class="card">
+      <div class="card-head"><h2>からだの設定</h2></div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-title">平均周期</div>
+          <div class="setting-note" id="cycleNote">記録から自動計算します</div>
+        </div>
+        <div class="num-wrap">
+          <input type="number" id="cycleInput" inputmode="numeric" min="15" max="60" placeholder="自動" aria-label="平均周期（日）">
+          <span>日</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>バックアップ</h2></div>
+      <p class="note">記録はこの端末のブラウザ内だけに保存されます。どこにも送信しません。機種変更のときは JSON ファイルに書き出して移せます。</p>
+      <button class="btn primary" id="exportBtn">JSONで書き出す</button>
+      <button class="btn" id="importBtn">ファイルから読み込む</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <div class="note" id="dataInfo"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>ホーム画面に追加</h2></div>
+      <p class="note">Safari の共有ボタン →「ホーム画面に追加」で、アプリのように全画面で開けます。</p>
+    </div>
+
+    <div class="card danger">
+      <div class="card-head"><h2>データ削除</h2></div>
+      <p class="note">この端末に保存されている記録をすべて消します。消すと元に戻せません。</p>
+      <button class="btn danger" id="clearBtn">すべての記録を削除</button>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabbar" aria-label="タブ">
+  <div class="tabbar-inner">
+    <button class="tab on" data-view="today">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.4-9.4z"/></svg>
+      今日
+    </button>
+    <button class="tab" data-view="calendar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M7.5 14h.01M12 14h.01M16.5 14h.01M7.5 17.5h.01M12 17.5h.01"/></svg>
+      カレンダー
+    </button>
+    <button class="tab" data-view="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>
+      設定
+    </button>
+  </div>
+</nav>
+
+<noscript><p style="padding:20px;text-align:center;">このページはJavaScriptを有効にすると使えます。</p></noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     定数
+  ========================================================= */
+  var STORAGE_KEY = 'karada-note-v1';
+  var MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
+  var MEAL_LABELS = { breakfast: '朝', lunch: '昼', dinner: '夜', snack: '間食' };
+  var WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+  var SYMPTOMS = ['腹痛', '頭痛', '腰痛', '眠気', 'イライラ', 'むくみ', '食欲増', '肌荒れ', 'だるさ'];
+  var FLOW_LABELS = { light: '少', normal: '普通', heavy: '多' };
+  var BOWELS = [
+    { key: 'none', label: 'なし', icon: '—', plain: true },
+    { key: 'normal', label: '普通', icon: '💩', plain: false },
+    { key: 'clear', label: 'すっきり', icon: '✨', plain: false },
+    { key: 'loose', label: 'ゆるめ', icon: '💧', plain: false },
+    { key: 'hard', label: '硬め', icon: '🪨', plain: false }
+  ];
+  var BOWEL_LABELS = { none: 'なし', normal: '普通', clear: 'すっきり', loose: 'ゆるめ', hard: '硬め' };
+
+  /* =========================================================
+     日付ユーティリティ（正午基準で日付ずれを防ぐ）
+  ========================================================= */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function toKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function fromKey(k) {
+    var p = String(k).split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12, 0, 0, 0);
+  }
+  function todayKey() { return toKey(new Date()); }
+  function addDays(k, n) {
+    var d = fromKey(k);
+    d.setDate(d.getDate() + n);
+    return toKey(d);
+  }
+  function diffDays(a, b) { return Math.round((fromKey(b) - fromKey(a)) / 86400000); }
+  function fmtMD(k) {
+    if (!k) return '—';
+    var d = fromKey(k);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WEEK[d.getDay()] + '）';
+  }
+  function fmtMDshort(k) {
+    if (!k) return '—';
+    var d = fromKey(k);
+    return (d.getMonth() + 1) + '/' + d.getDate();
+  }
+  function isValidKey(k) { return typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function $(sel) { return document.querySelector(sel); }
+  function $all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+
+  /* =========================================================
+     データ
+  ========================================================= */
+  function blankDay() {
+    return {
+      weight: null,
+      meals: { breakfast: '', lunch: '', dinner: '', snack: '' },
+      period: { active: false, flow: '', symptoms: [] },
+      bowel: { type: '', count: 0, memo: '' }
+    };
+  }
+
+  function normDay(src) {
+    var d = blankDay();
+    if (!src || typeof src !== 'object') return d;
+    if (typeof src.weight === 'number' && isFinite(src.weight)) {
+      d.weight = Math.min(300, Math.max(0, Math.round(src.weight * 10) / 10));
+    }
+    if (src.meals && typeof src.meals === 'object') {
+      MEALS.forEach(function (m) {
+        if (typeof src.meals[m] === 'string') d.meals[m] = src.meals[m];
+      });
+    }
+    if (src.period && typeof src.period === 'object') {
+      d.period.active = !!src.period.active;
+      if (typeof src.period.flow === 'string' && FLOW_LABELS[src.period.flow]) d.period.flow = src.period.flow;
+      if (Object.prototype.toString.call(src.period.symptoms) === '[object Array]') {
+        d.period.symptoms = src.period.symptoms.filter(function (s) {
+          return typeof s === 'string' && SYMPTOMS.indexOf(s) >= 0;
+        });
+      }
+    }
+    if (src.bowel && typeof src.bowel === 'object') {
+      if (typeof src.bowel.type === 'string' && BOWEL_LABELS[src.bowel.type]) d.bowel.type = src.bowel.type;
+      if (typeof src.bowel.count === 'number' && isFinite(src.bowel.count)) {
+        d.bowel.count = Math.max(0, Math.min(20, Math.round(src.bowel.count)));
+      }
+      if (typeof src.bowel.memo === 'string') d.bowel.memo = src.bowel.memo;
+    }
+    return d;
+  }
+
+  function defaultStore() {
+    return { version: 1, days: {}, settings: { cycleOverride: null }, savedAt: null };
+  }
+
+  function normalizeStore(obj) {
+    var s = defaultStore();
+    if (!obj || typeof obj !== 'object') return s;
+    if (obj.settings && typeof obj.settings === 'object') {
+      var ov = obj.settings.cycleOverride;
+      if (typeof ov === 'number' && isFinite(ov) && ov >= 15 && ov <= 60) s.settings.cycleOverride = Math.round(ov);
+    }
+    if (obj.days && typeof obj.days === 'object' && Object.prototype.toString.call(obj.days) !== '[object Array]') {
+      Object.keys(obj.days).forEach(function (k) {
+        if (isValidKey(k)) s.days[k] = normDay(obj.days[k]);
+      });
+    }
+    if (typeof obj.savedAt === 'string') s.savedAt = obj.savedAt;
+    return s;
+  }
+
+  function loadStore() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultStore();
+      return normalizeStore(JSON.parse(raw));
+    } catch (e) {
+      return defaultStore();
+    }
+  }
+
+  var store = loadStore();
+
+  /* =========================================================
+     状態
+  ========================================================= */
+  var selectedDate = todayKey();
+  var currentView = 'today';
+  var chartRange = 14;
+  var calCursor = selectedDate.slice(0, 7) + '-01';
+  var saveTimer = null;
+  var startHold = null; // 直前に入力した開始日（入力欄に残すため）
+
+  function dayFor(k) { return store.days[k] || null; }
+
+  function ensureDay(k) {
+    if (!store.days[k]) store.days[k] = blankDay();
+    return store.days[k];
+  }
+
+  function hasData(d) {
+    if (!d) return false;
+    if (typeof d.weight === 'number') return true;
+    if (d.period && d.period.active) return true;
+    if (d.period && d.period.symptoms && d.period.symptoms.length) return true;
+    if (d.bowel && (d.bowel.type || d.bowel.memo)) return true;
+    for (var i = 0; i < MEALS.length; i++) {
+      if (d.meals && d.meals[MEALS[i]] && d.meals[MEALS[i]].trim()) return true;
+    }
+    return false;
+  }
+
+  function save() {
+    store.savedAt = new Date().toISOString();
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    } catch (e) {
+      setSaveState('保存できませんでした', true);
+      return;
+    }
+    setSaveState('保存しました', true);
+    renderAdvice();
+  }
+
+  function setSaveState(text, flash) {
+    var el = $('#saveState');
+    if (!el) return;
+    el.textContent = text;
+    if (flash) el.classList.add('on');
+    if (saveTimer) window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(function () {
+      el.textContent = 'この端末に自動保存';
+      el.classList.remove('on');
+    }, 1600);
+  }
+
+  /* =========================================================
+     生理周期の計算
+  ========================================================= */
+  function periodStartKeys() {
+    var keys = Object.keys(store.days).filter(function (k) {
+      var d = store.days[k];
+      return d && d.period && d.period.active;
+    }).sort();
+    var starts = [];
+    var prev = null;
+    keys.forEach(function (k) {
+      if (prev === null || diffDays(prev, k) > 1) starts.push(k);
+      prev = k;
+    });
+    return starts;
+  }
+
+  function averageCycle(starts) {
+    if (store.settings.cycleOverride) return store.settings.cycleOverride;
+    if (starts.length < 2) return 28;
+    var gaps = [];
+    for (var i = 1; i < starts.length; i++) {
+      var g = diffDays(starts[i - 1], starts[i]);
+      if (g >= 15 && g <= 60) gaps.push(g);
+    }
+    if (!gaps.length) return 28;
+    var recent = gaps.slice(-6);
+    var sum = 0;
+    for (var j = 0; j < recent.length; j++) sum += recent[j];
+    return Math.round(sum / recent.length);
+  }
+
+  function cycleInfo(refKey) {
+    var starts = periodStartKeys();
+    var avg = averageCycle(starts);
+    var info = {
+      avg: avg,
+      auto: !store.settings.cycleOverride,
+      starts: starts,
+      last: null,
+      day: null,
+      next: null,
+      ovulation: null,
+      hasData: starts.length > 0
+    };
+    if (!starts.length) return info;
+    var last = null;
+    for (var i = 0; i < starts.length; i++) {
+      if (starts[i] <= refKey) last = starts[i];
+    }
+    if (!last) last = starts[0];
+    info.last = last;
+    var dnum = diffDays(last, refKey) + 1;
+    info.day = dnum > 0 ? dnum : null;
+    var next = addDays(last, avg);
+    var guard = 0;
+    while (next < refKey && guard < 24) {
+      next = addDays(next, avg);
+      guard++;
+    }
+    info.next = next;
+    info.ovulation = addDays(next, -14);
+    return info;
+  }
+
+  /* =========================================================
+     今日のサポート（栄養バランス・食べすぎ・体調）
+  ========================================================= */
+  var NUTRI_ITEMS = [
+    {
+      key: 'staple', name: '主食', icon: '🍚',
+      words: [
+        'ごはん', 'ご飯', '白米', '玄米', '米飯', 'お米', '雑穀', 'おにぎり', 'おむすび', 'にぎり',
+        '寿司', 'すし', '丼', 'どんぶり', 'チャーハン', '炒飯', 'カレーライス', 'リゾット', 'パエリア',
+        'パン', 'トースト', '食パン', 'ロールパン', 'ベーグル', 'クロワッサン', 'サンドイッチ', 'サンド',
+        'バゲット', 'ナン', 'ピザ', '麺', 'うどん', 'そば', '蕎麦', 'ラーメン', '中華麺', 'つけ麺',
+        'パスタ', 'スパゲッティ', 'スパゲティ', 'マカロニ', 'そうめん', 'ひやむぎ', '冷やし中華',
+        '焼きそば', 'ビーフン', 'フォー', 'ワンタン', 'オートミール', 'グラノーラ', 'シリアル',
+        'コーンフレーク', '餅', 'お好み焼き', 'たこ焼き', 'ホットケーキ', 'パンケーキ'
+      ]
+    },
+    {
+      key: 'protein', name: 'たんぱく質', icon: '🍗',
+      words: [
+        '肉', '鶏', '豚', '牛', 'ひき肉', 'ミンチ', 'ハム', 'ベーコン', 'ソーセージ', 'ウインナー',
+        'サラダチキン', 'チキン', '鶏肉', '豚肉', '牛肉', 'ステーキ', '焼肉', 'しゃぶしゃぶ',
+        'すき焼き', 'ハンバーグ', 'ミートボール', '餃子', 'ぎょうざ', 'シュウマイ', '焼き鳥', 'やきとり',
+        '唐揚げ', 'から揚げ', 'からあげ', 'とんかつ', 'トンカツ', 'カツ', 'フライドチキン',
+        '魚', '鮭', 'さけ', 'サーモン', 'さば', '鯖', 'まぐろ', 'マグロ', 'かつお', '鰹', 'ぶり',
+        'あじ', '鯵', 'さんま', '秋刀魚', 'たら', 'たらこ', '明太子', 'しらす', 'えび', 'エビ', '海老',
+        'いか', 'イカ', 'たこ', 'タコ', 'あさり', 'しじみ', '貝', 'ツナ', 'ツナ缶', 'ちくわ',
+        'かまぼこ', 'はんぺん', '練り物', '卵', 'たまご', '玉子', '卵焼き', 'ゆで卵', '目玉焼き',
+        'オムレツ', '納豆', '豆腐', '厚揚げ', '油揚げ', '冷奴', '湯豆腐', 'がんも', 'おから', '豆乳',
+        '大豆', '豆', '刺身', 'さしみ', 'お造り', 'うなぎ', '鰻', '蒸し鶏',
+        'ヨーグルト', 'チーズ', '牛乳', '乳製品', 'プロテイン', 'ささみ', '肉じゃが'
+      ]
+    },
+    {
+      key: 'veggie', name: '野菜・海藻・きのこ', icon: '🥦',
+      words: [
+        '野菜', 'サラダ', 'レタス', 'キャベツ', 'トマト', 'きゅうり', 'にんじん', '人参',
+        '玉ねぎ', 'たまねぎ', 'ねぎ', 'ネギ', '長ねぎ', '青ねぎ', 'ほうれん草', '小松菜', '水菜',
+        '春菊', 'チンゲン菜', '青梗菜', 'ブロッコリー', 'カリフラワー', 'ピーマン', 'パプリカ',
+        'なす', '茄子', 'かぼちゃ', 'カボチャ', '大根', 'だいこん', 'かぶ', 'ごぼう', 'れんこん',
+        '蓮根', 'アスパラ', 'セロリ', 'もやし', '白菜', 'しそ', '大葉', 'オクラ', 'ズッキーニ',
+        'ゴーヤ', 'にがうり', '枝豆', 'えだまめ', 'いんげん', 'スナップエンドウ', 'とうもろこし',
+        '海藻', 'わかめ', 'ワカメ', '昆布', 'ひじき', '海苔', 'もずく', 'めかぶ', 'きのこ',
+        'きのこ類', 'しいたけ', '椎茸', 'しめじ', 'えのき', 'えのきたけ', 'なめこ', 'まいたけ',
+        '舞茸', 'エリンギ', 'マッシュルーム', 'きくらげ', 'キクラゲ', '切り干し大根', '野菜炒め',
+        '温野菜', '漬物', 'ぬか漬け', '浅漬け', 'ラタトゥイユ', 'ミネストローネ', 'ポトフ',
+        'じゃがいも', 'じゃが芋', 'アボカド', 'コールスロー', '野菜スープ'
+      ]
+    },
+    {
+      key: 'fiber', name: '食物繊維・発酵', icon: '🥣',
+      words: [
+        '納豆', 'ヨーグルト', 'キムチ', 'きのこ', 'しいたけ', 'しめじ', 'えのき', 'なめこ',
+        'まいたけ', 'エリンギ', 'きくらげ', '豆', '大豆', 'ひよこ豆', 'レンズ豆', 'あずき', '小豆',
+        '玄米', 'オートミール', 'オーツ', '全粒粉', '全粒', 'グラノーラ', '雑穀', 'もち麦',
+        '麦ごはん', '大麦', '果物', 'フルーツ', 'りんご', '林檎', 'バナナ', 'みかん', 'オレンジ',
+        'いちご', '苺', 'ブルーベリー', 'ぶどう', 'キウイ', '柿', '桃', '梨', 'メロン',
+        'パイナップル', 'アボカド', 'プルーン', 'レーズン', 'ドライフルーツ', 'さつまいも',
+        'さつま芋', '焼き芋', '里芋', 'こんにゃく', 'しらたき', '糸こんにゃく', 'ごぼう', 'れんこん',
+        '切り干し大根', '海藻', 'わかめ', 'ひじき', 'もずく', 'めかぶ', '味噌', 'みそ', '甘酒',
+        'ぬか漬け', '漬物', 'チーズ', 'ケフィア', 'ラッシー', '食物繊維', 'ごま', 'アーモンド',
+        'くるみ', 'ナッツ', 'チアシード', '寒天', 'ところてん', 'おから', 'ブロッコリー',
+        'アスパラ', 'オクラ'
+      ]
+    }
+  ];
+
+  var HEAVY_WORDS = {
+    fried: [
+      '唐揚げ', 'から揚げ', 'からあげ', '竜田揚げ', '天ぷら', 'てんぷら', 'かき揚げ', 'とんかつ',
+      'トンカツ', 'カツ丼', 'カツサンド', 'カツカレー', 'ヒレカツ', 'チキンカツ', 'フライ', 'フライド',
+      'ポテト', 'コロッケ', 'メンチカツ', 'チキン南蛮', '春巻き', '揚げ出し'
+    ],
+    fast: [
+      'ラーメン', 'つけ麺', '油そば', 'まぜそば', 'カップ麺', 'カップラーメン', 'インスタント',
+      '焼きそば', '大盛', '特盛', 'メガ盛', 'ハンバーガー', 'バーガー', 'マクドナルド', 'マクド',
+      'ケンタッキー', 'ファストフード', 'ファーストフード', '牛丼', '吉野家', 'すき家', '松屋',
+      'ピザ', 'ドーナツ'
+    ],
+    alcohol: [
+      'ビール', 'ワイン', '日本酒', '焼酎', 'ハイボール', 'チューハイ', '酎ハイ', 'サワー',
+      'カクテル', '飲み会', '晩酌', '泡盛', '梅酒', 'アルコール', 'お酒'
+    ],
+    sweets: [
+      'ケーキ', 'チョコ', 'チョコレート', 'アイス', 'アイスクリーム', 'クッキー', 'ビスケット',
+      'プリン', 'シュークリーム', 'パフェ', 'ワッフル', 'マカロン', '大福', '和菓子', 'ようかん',
+      '羊羹', 'あんぱん', 'あんパン', 'ソフトクリーム', 'ガトーショコラ', 'タルト', 'モンブラン',
+      'キャンディ', '飴', 'グミ', 'ポテチ', 'ポテトチップス', 'スナック菓子', 'お菓子', '菓子',
+      'せんべい', '煎餅', 'ラスク', 'カステラ', 'どら焼き', 'たい焼き', '団子', 'だんご', 'マフィン',
+      'ブラウニー', 'ハーゲンダッツ'
+    ],
+    late: ['深夜', '夜遅', '夜中', '寝る前', '遅めの夜', '遅い夜ごはん']
+  };
+
+  // 語の誤検出を避けるための置き換え（判定用テキストの下ごしらえ）
+  var ADVICE_FIX = [
+    ['サラダチキン', 'チキン'],
+    ['サラダ油', ''],
+    ['サラダ味', ''],
+    ['パンプキン', 'カボチャ'],
+    ['アイスコーヒー', 'コーヒー'],
+    ['アイスティー', '紅茶'],
+    ['アイスカフェラテ', 'カフェラテ'],
+    ['アイスラテ', 'カフェラテ'],
+    ['アイスココア', 'ココア'],
+    ['アイスミルク', 'ミルク'],
+    ['カツオ', '鰹'],
+    ['かつお', '鰹']
+  ];
+
+  function normFood(s) {
+    var t = String(s == null ? '' : s);
+    try { t = t.normalize('NFKC'); } catch (e) {}
+    t = t.toLowerCase();
+    for (var i = 0; i < ADVICE_FIX.length; i++) {
+      t = t.split(ADVICE_FIX[i][0]).join(ADVICE_FIX[i][1]);
+    }
+    return t.replace(/[\s\u3000]+/g, '');
+  }
+
+  function prepWords(list) {
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var w = normFood(list[i]);
+      if (w && out.indexOf(w) < 0) out.push(w);
+    }
+    return out;
+  }
+
+  NUTRI_ITEMS.forEach(function (it) { it.nwords = prepWords(it.words); });
+  var HEAVY_N = {};
+  Object.keys(HEAVY_WORDS).forEach(function (k) { HEAVY_N[k] = prepWords(HEAVY_WORDS[k]); });
+
+  function listHit(text, words) {
+    for (var i = 0; i < words.length; i++) {
+      if (text.indexOf(words[i]) >= 0) return true;
+    }
+    return false;
+  }
+
+  function listHits(text, words) {
+    var out = [];
+    for (var i = 0; i < words.length; i++) {
+      if (text.indexOf(words[i]) >= 0 && out.indexOf(words[i]) < 0) out.push(words[i]);
+    }
+    return out;
+  }
+
+  var LATE_RE = /(2[2-4]|[0-3])時(?!間)/;
+
+  function weightDiffFor(k) {
+    var d = dayFor(k);
+    var p = dayFor(addDays(k, -1));
+    if (!d || typeof d.weight !== 'number') return null;
+    if (!p || typeof p.weight !== 'number') return null;
+    return Math.round((d.weight - p.weight) * 10) / 10;
+  }
+
+  function countSnackItems(text) {
+    var raw = String(text == null ? '' : text).trim();
+    if (!raw) return 0;
+    var parts = raw.split(/[、,，.。・/／\n\r\t]+/);
+    var n = 0;
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].replace(/[\s\u3000]+/g, '').length) n++;
+    }
+    return n;
+  }
+
+  function heavyCheck(mealText, dinnerText, snackText, weightDiff) {
+    var score = 0;
+    var reasons = [];
+    if (listHit(mealText, HEAVY_N.fried)) { score += 2; reasons.push('揚げ物'); }
+    if (listHit(mealText, HEAVY_N.fast)) { score += 2; reasons.push('こってり・ファストフード'); }
+    if (listHit(mealText, HEAVY_N.alcohol)) { score += 2; reasons.push('お酒'); }
+    var sweets = listHits(mealText, HEAVY_N.sweets);
+    if (sweets.length) { score += Math.min(2, sweets.length); reasons.push('甘いもの'); }
+    var snackItems = countSnackItems(snackText);
+    if (snackItems >= 2) { score += 1; reasons.push('間食' + snackItems + '品'); }
+    if (LATE_RE.test(dinnerText) || listHit(dinnerText, HEAVY_N.late)) {
+      score += 1;
+      reasons.push('夜遅め');
+    }
+    if (weightDiff !== null && weightDiff >= 0.6) {
+      score += 2;
+      reasons.push('体重＋' + weightDiff.toFixed(1) + 'kg');
+    }
+    var level = 'none';
+    if (score >= 3) level = 'heavy';
+    else if (score >= 2) level = 'mild';
+    return { score: score, level: level, reasons: reasons };
+  }
+
+  function periodPhase(k, d) {
+    if (d && d.period && d.period.active) return { phase: 'active', until: null };
+    var info = cycleInfo(k);
+    if (!info.hasData || !info.next) return { phase: 'none', until: null };
+    var until = diffDays(k, info.next);
+    if (until >= 0 && until <= 4) return { phase: 'pre', until: until };
+    return { phase: 'none', until: until };
+  }
+
+  function bowelNoneStreak(k) {
+    var n = 0;
+    var cur = k;
+    var d = dayFor(cur);
+    if (d && d.bowel && d.bowel.type) {
+      if (d.bowel.type !== 'none') return 0;
+      n++;
+      cur = addDays(cur, -1);
+    } else {
+      // 今日がまだ未記録なら、昨日からさかのぼって数える
+      cur = addDays(cur, -1);
+    }
+    for (var i = 0; i < 14; i++) {
+      var dd = dayFor(cur);
+      if (!dd || !dd.bowel || dd.bowel.type !== 'none') break;
+      n++;
+      cur = addDays(cur, -1);
+    }
+    return n;
+  }
+
+  function analyzeAdvice(k) {
+    var d = dayFor(k);
+    var blank = blankDay();
+    var rec = d || blank;
+    var meals = rec.meals || blank.meals;
+    var parts = [];
+    MEALS.forEach(function (m) {
+      if (typeof meals[m] === 'string' && meals[m].trim()) parts.push(meals[m]);
+    });
+    var mealText = normFood(parts.join('　'));
+    var dinnerText = normFood(meals.dinner || '');
+    var hasMeals = parts.length > 0;
+    var nutri = {};
+    var hit = 0;
+    NUTRI_ITEMS.forEach(function (it) {
+      var on = hasMeals && listHit(mealText, it.nwords);
+      nutri[it.key] = on;
+      if (on) hit++;
+    });
+    var weightDiff = weightDiffFor(k);
+    var heavy = heavyCheck(mealText, dinnerText, meals.snack, weightDiff);
+    var ph = periodPhase(k, d);
+    var anyInput = hasMeals ||
+      (d && typeof d.weight === 'number') ||
+      (d && d.bowel && (d.bowel.type || d.bowel.memo)) ||
+      (d && d.period && (d.period.active || (d.period.symptoms && d.period.symptoms.length)));
+    return {
+      hasMeals: hasMeals,
+      nutri: nutri,
+      hit: hit,
+      missing: NUTRI_ITEMS.filter(function (it) { return !nutri[it.key]; }),
+      weightDiff: weightDiff,
+      heavy: heavy,
+      phase: ph.phase,
+      until: ph.until,
+      bowelStreak: bowelNoneStreak(k),
+      bowelType: (d && d.bowel && d.bowel.type) ? d.bowel.type : '',
+      anyInput: !!anyInput
+    };
+  }
+
+  var NUTRI_HINTS = {
+    staple: 'ごはん・パン・麺を少し',
+    protein: '肉・魚・卵・大豆・乳製品をひとつ',
+    veggie: '野菜・海藻・きのこを一品',
+    fiber: '納豆・ヨーグルト・玄米・果物からひとつ'
+  };
+
+  function renderAdvice() {
+    var box = $('#adviceBody');
+    if (!box) return;
+    var a = analyzeAdvice(selectedDate);
+    var html = [];
+
+    if (!a.anyInput) {
+      box.innerHTML = '<div class="advice-empty">今日の食事や体調を入れると、ここにバランスチェックが出ます。<br>' +
+        '食べすぎ・栄養バランス・生理や便通に合わせたひとことをお知らせします。</div>';
+      return;
+    }
+
+    // 見出しのひとこと
+    if (!a.hasMeals) {
+      html.push('<p class="advice-lead">食事を入れると、栄養バランスのチェックが出ます。</p>');
+    } else if (a.hit === 4) {
+      html.push('<p class="advice-lead">主食・たんぱく質・野菜・食物繊維、<span class="num">4つとも</span>そろっています◎</p>');
+    } else if (a.hit === 0) {
+      html.push('<p class="advice-lead">食事の内容から栄養をチェックしています。主食・たんぱく質・野菜を足すと◎</p>');
+    } else {
+      var missNames = a.missing.map(function (it) { return it.name; }).join('・');
+      html.push('<p class="advice-lead"><span class="num">' + a.hit + '/4</span> そろっています。' +
+        esc(missNames) + 'が少なめかも。</p>');
+    }
+
+    // 栄養バッジ
+    html.push('<div class="nutri-grid">');
+    NUTRI_ITEMS.forEach(function (it) {
+      var on = a.nutri[it.key];
+      var cls = !a.hasMeals ? 'none' : (on ? 'on' : 'off');
+      var tag = !a.hasMeals ? '—' : (on ? 'とれてる' : '不足気味');
+      html.push('<div class="nutri ' + cls + '">' +
+        '<span class="nutri-top"><span class="ic">' + it.icon + '</span>' +
+        '<span class="nm">' + esc(it.name) + '</span></span>' +
+        '<span class="tg">' + tag + '</span></div>');
+    });
+    html.push('</div>');
+
+    // ひとこと
+    var tips = [];
+    var reasonText = a.heavy.reasons.length
+      ? '<span style="color:#a8741c;">（' + esc(a.heavy.reasons.slice(0, 3).join('・')) + '）</span>' : '';
+
+    if (a.heavy.level === 'heavy') {
+      tips.push({
+        icon: '⚠️', cls: 'warn',
+        text: '<b>今日はボリュームしっかりめ！</b>お水多め＆明日は少し軽めに調整すると安心です。' + reasonText
+      });
+    } else if (a.heavy.level === 'mild') {
+      tips.push({
+        icon: '⚠️', cls: 'warn',
+        text: '少し重ためかも。お水を多めに、明日の朝は軽めにすると整いやすいです。' + reasonText
+      });
+    }
+
+    if (a.phase === 'active') {
+      tips.push({
+        icon: '🩸', cls: 'care',
+        text: '生理中は<b>鉄分</b>（赤身の肉・魚・ほうれん草・小松菜・納豆）と温かい飲み物を。無理せずゆっくり休んでくださいね。'
+      });
+    } else if (a.phase === 'pre') {
+      tips.push({
+        icon: '🌙', cls: 'care',
+        text: '生理前の時期' + (a.until > 0 ? '（予定日まであと' + a.until + '日）' : '') +
+          '。鉄分と温かい飲み物を意識して、むくみやすいので無理しないでくださいね。'
+      });
+    }
+
+    if (a.bowelStreak >= 2) {
+      tips.push({
+        icon: '💧', cls: '',
+        text: '便通「なし」が<b>' + a.bowelStreak + '日</b>続いています。お水・食物繊維・発酵食品（納豆・ヨーグルト）を多めに、軽く歩くのもおすすめです。'
+      });
+    } else if (a.bowelType === 'none' || a.bowelType === 'hard') {
+      tips.push({
+        icon: '💧', cls: '',
+        text: '今日は便通がすっきりしないみたい。水分と食物繊維、発酵食品を意識してみてください。'
+      });
+    }
+
+    if (a.hasMeals && a.missing.length && a.missing.length < 4) {
+      var hints = a.missing.map(function (it) { return NUTRI_HINTS[it.key] || it.name; });
+      tips.push({
+        icon: '🥗', cls: '',
+        text: '不足気味のものを足すなら：' + esc(hints.join('／')) + '。'
+      });
+    }
+
+    if (!tips.length) {
+      tips.push({
+        icon: '🌸', cls: '',
+        text: a.hasMeals
+          ? '今日は食べすぎサインもなく、いい感じ。水分もこまめにどうぞ。'
+          : '体重や体調の記録もいれておくと、変化に気づきやすくなります。'
+      });
+    }
+
+    if (tips.length) {
+      html.push('<ul class="advice-tips">');
+      tips.slice(0, 4).forEach(function (t) {
+        html.push('<li class="tip' + (t.cls ? ' ' + t.cls : '') + '">' +
+          '<span class="ic">' + t.icon + '</span><span class="tx">' + t.text + '</span></li>');
+      });
+      html.push('</ul>');
+    }
+
+    html.push('<div class="advice-legend">主食＝ごはん・パン・麺／たんぱく質＝肉・魚・卵・大豆・乳製品／' +
+      '野菜・海藻・きのこ＝サラダ・きのこ・わかめ／食物繊維・発酵＝納豆・ヨーグルト・玄米・果物など</div>');
+
+    box.innerHTML = html.join('');
+  }
+
+  /* =========================================================
+     今日タブ：描画
+  ========================================================= */
+  function loadDayUI() {
+    var d = dayFor(selectedDate);
+    var dt = fromKey(selectedDate);
+
+    $('#dateLabel').textContent = (dt.getMonth() + 1) + '月' + dt.getDate() + '日';
+    $('#dateWeekday').textContent = dt.getFullYear() + '年 ' + WEEK[dt.getDay()] + '曜日';
+    $('#todayBadge').style.display = (selectedDate === todayKey()) ? '' : 'none';
+    $('#datePicker').value = selectedDate;
+    $('#goToday').style.visibility = (selectedDate === todayKey()) ? 'hidden' : 'visible';
+
+    // 体重
+    var wi = $('#weightInput');
+    wi.value = (d && typeof d.weight === 'number') ? d.weight.toFixed(1) : '';
+    renderWeightDelta();
+
+    // 食事
+    $all('textarea[data-meal]').forEach(function (ta) {
+      var m = ta.getAttribute('data-meal');
+      ta.value = d ? (d.meals[m] || '') : '';
+      autoGrow(ta);
+    });
+
+    // 生理
+    var p = d ? d.period : blankDay().period;
+    $('#periodToggle').checked = !!p.active;
+    $all('#flowSeg button').forEach(function (b) {
+      var on = p.flow === b.getAttribute('data-flow');
+      b.classList.toggle('on', on);
+      b.disabled = !p.active;
+    });
+    $all('#symptomChips .chip').forEach(function (c) {
+      c.classList.toggle('on', p.symptoms.indexOf(c.getAttribute('data-symptom')) >= 0);
+    });
+
+    // 便通
+    var bw = d ? d.bowel : blankDay().bowel;
+    $all('#bowelGrid .bowel-btn').forEach(function (b) {
+      b.classList.toggle('on', bw.type === b.getAttribute('data-type'));
+    });
+    $('#bowelCount').textContent = String(bw.count || 0);
+    $('#bowelMemo').value = bw.memo || '';
+
+    renderCycle();
+    renderAdvice();
+  }
+
+  function renderWeightDelta() {
+    var d = dayFor(selectedDate);
+    var el = $('#weightDelta');
+    var hint = $('#weightHint');
+    var has = d && typeof d.weight === 'number';
+    if (!has) {
+      el.className = 'delta';
+      el.textContent = '未記録';
+      hint.textContent = '体重を入れると前日比が出ます';
+      return;
+    }
+    var prev = dayFor(addDays(selectedDate, -1));
+    if (!prev || typeof prev.weight !== 'number') {
+      el.className = 'delta';
+      el.textContent = '前日比 —';
+      hint.textContent = '前日の記録がありません';
+      return;
+    }
+    var diff = Math.round((d.weight - prev.weight) * 10) / 10;
+    var sign = diff > 0 ? '＋' : (diff < 0 ? '−' : '±');
+    el.textContent = '前日比 ' + sign + Math.abs(diff).toFixed(1) + ' kg';
+    if (diff > 0) {
+      el.className = 'delta up';
+      hint.textContent = '前日 ' + prev.weight.toFixed(1) + ' kg より ' + Math.abs(diff).toFixed(1) + ' kg 増';
+    } else if (diff < 0) {
+      el.className = 'delta down';
+      hint.textContent = '前日 ' + prev.weight.toFixed(1) + ' kg より ' + Math.abs(diff).toFixed(1) + ' kg 減';
+    } else {
+      el.className = 'delta';
+      hint.textContent = '前日と同じ ' + prev.weight.toFixed(1) + ' kg';
+    }
+  }
+
+  function renderCycle() {
+    var box = $('#cycleBox');
+    var info = cycleInfo(selectedDate);
+    var isToday = selectedDate === todayKey();
+    var d = dayFor(selectedDate);
+    var html = '';
+
+    if (!info.hasData) {
+      html = '<div class="cycle-empty">生理の記録をつけると、次回予定日と周期が出ます（初期値28日周期）。</div>';
+    } else {
+      html += '<div class="cycle-top">';
+      html += '<div class="cycle-day">' + (isToday ? '今日は ' : 'この日は ') + '<b>' + (info.day || '—') + '</b> 日目</div>';
+      html += '<div class="cycle-avg">平均周期 ' + info.avg + '日' + (info.auto ? '（自動）' : '（手動）') + '</div>';
+      html += '</div>';
+      html += '<div class="cycle-line">';
+      html += '<span>次回予定 <b>' + fmtMD(info.next) + '</b></span>';
+      html += '<span>排卵日（推定） <b>' + fmtMD(info.ovulation) + '</b></span>';
+      html += '</div>';
+      if (d && d.period && d.period.active) {
+        html += '<div class="cycle-line"><span style="color:#c94b74;font-weight:700;">生理中' +
+          (d.period.flow ? '（' + FLOW_LABELS[d.period.flow] + '）' : '') + '</span></div>';
+      }
+      if (info.day && info.day > info.avg + 2 && !(d && d.period && d.period.active)) {
+        html += '<div class="cycle-line"><span style="color:#a8741c;">予定日を過ぎています。記録を確認してみてください。</span></div>';
+      }
+    }
+    box.innerHTML = html;
+    renderPeriodStart();
+  }
+
+  /* ---------- 生理が始まった日の入力 ---------- */
+  function renderPeriodStart() {
+    var input = $('#periodStartInput');
+    var box = $('#periodStartChips');
+    var btn = $('#periodStartBtn');
+    if (!input || !box) return;
+    input.max = todayKey();
+
+    var starts = periodStartKeys();
+    if (startHold && !(store.days[startHold] && store.days[startHold].period && store.days[startHold].period.active)) {
+      startHold = null;
+    }
+    // 入力欄は直近の開始日を初期値に。編集中や確認直後は上書きしない
+    if (document.activeElement !== input) {
+      if (startHold && isValidKey(startHold)) input.value = startHold;
+      else if (starts.length) input.value = starts[starts.length - 1];
+      else if (!isValidKey(input.value)) input.value = todayKey();
+    }
+    if (btn) btn.disabled = !isValidKey(input.value);
+
+    if (!starts.length) {
+      box.innerHTML = '<span class="start-empty">まだ開始日の記録がありません</span>';
+      return;
+    }
+    var recent = starts.slice(-3).reverse();
+    var html = recent.map(function (k) {
+      return '<span class="start-chip">' + fmtMDshort(k) +
+        '<button type="button" class="x" data-start="' + k + '" aria-label="' +
+        fmtMD(k) + 'の開始日を取り消す">✕</button></span>';
+    }).join('');
+    if (starts.length > recent.length) {
+      html += '<span class="start-empty">ほか' + (starts.length - recent.length) + '件</span>';
+    }
+    box.innerHTML = html;
+  }
+
+  function setPeriodStart(k) {
+    if (!isValidKey(k)) {
+      setSaveState('日付を入れてください', true);
+      return;
+    }
+    if (k > todayKey()) {
+      setSaveState('未来の日付は選べません', true);
+      return;
+    }
+    var day = ensureDay(k);
+    var already = !!(day.period && day.period.active);
+    day.period.active = true;
+    startHold = k;
+    save();
+    if (selectedDate === k) loadDayUI();
+    else renderCycle();
+    if (currentView === 'calendar') renderCalendar();
+    setSaveState(fmtMDshort(k) + (already ? ' は生理中で登録済みです' : ' を開始日に記録しました'), true);
+  }
+
+  function clearPeriodStart(k) {
+    var day = dayFor(k);
+    if (!day || !day.period || !day.period.active) return;
+    day.period.active = false;
+    if (startHold === k) startHold = null;
+    save();
+    if (selectedDate === k) loadDayUI();
+    else renderCycle();
+    if (currentView === 'calendar') renderCalendar();
+    setSaveState(fmtMDshort(k) + ' の開始日を取り消しました', true);
+  }
+
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(44, el.scrollHeight + 2) + 'px';
+  }
+
+  function findPrevMeal(meal, beforeKey) {
+    var keys = Object.keys(store.days).filter(function (k) { return k < beforeKey; }).sort().reverse();
+    for (var i = 0; i < keys.length; i++) {
+      var d = store.days[keys[i]];
+      if (d && d.meals && typeof d.meals[meal] === 'string' && d.meals[meal].trim()) {
+        return d.meals[meal];
+      }
+    }
+    return '';
+  }
+
+  /* =========================================================
+     カレンダー
+  ========================================================= */
+  function renderCalendar() {
+    var parts = calCursor.split('-');
+    var y = Number(parts[0]);
+    var m = Number(parts[1]);
+    $('#calTitle').textContent = y + '年' + m + '月';
+
+    var first = new Date(y, m - 1, 1, 12);
+    var gridStart = addDays(toKey(first), -first.getDay());
+    var info = cycleInfo(todayKey());
+    var today = todayKey();
+    var html = [];
+
+    for (var i = 0; i < 42; i++) {
+      var k = addDays(gridStart, i);
+      var d = fromKey(k);
+      var dow = d.getDay();
+      var cls = ['cal-cell'];
+      if (d.getMonth() !== m - 1) cls.push('other');
+      if (dow === 0) cls.push('sun');
+      if (dow === 6) cls.push('sat');
+      if (k === today) cls.push('today');
+      if (k === selectedDate) cls.push('selected');
+
+      var rec = dayFor(k);
+      if (rec && rec.period && rec.period.active) cls.push('period');
+      var isPred = info.next && k === info.next;
+      var isOvu = info.ovulation && k === info.ovulation;
+      if (isPred && !(rec && rec.period.active)) cls.push('predicted');
+      if (isOvu && !isPred) cls.push('ovu');
+
+      var dots = '';
+      if (rec && typeof rec.weight === 'number') dots += '<i class="dot w"></i>';
+      if (rec && rec.bowel && rec.bowel.type) dots += '<i class="dot b"></i>';
+
+      html.push(
+        '<button type="button" class="' + cls.join(' ') + '" data-date="' + k + '" ' +
+        'aria-label="' + fmtMD(k) + '">' +
+        '<span class="num">' + d.getDate() + '</span>' +
+        '<span class="dots">' + dots + '</span>' +
+        '</button>'
+      );
+    }
+    $('#calGrid').innerHTML = html.join('');
+  }
+
+  /* =========================================================
+     体重グラフ
+  ========================================================= */
+  function renderChart() {
+    var wrap = $('#chartWrap');
+    var cap = $('#chartCaption');
+    var n = chartRange;
+    var today = todayKey();
+    var start = addDays(today, -(n - 1));
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var k = addDays(start, i);
+      var d = store.days[k];
+      if (d && typeof d.weight === 'number') pts.push({ k: k, w: d.weight });
+    }
+    if (!pts.length) {
+      wrap.innerHTML = '<div class="chart-empty">まだ体重の記録がありません。<br>「今日」タブで記録すると、ここに折れ線が出ます。</div>';
+      cap.textContent = '';
+      return;
+    }
+
+    var W = 320, H = 168, L = 34, R = 12, T = 20, B = 26;
+    var ws = pts.map(function (p) { return p.w; });
+    var mn = Math.min.apply(null, ws);
+    var mx = Math.max.apply(null, ws);
+    if (mx - mn < 1) { var c = (mx + mn) / 2; mn = c - 0.5; mx = c + 0.5; }
+    var pad = (mx - mn) * 0.18;
+    mn -= pad; mx += pad;
+
+    function xOf(key) {
+      var ratio = n > 1 ? diffDays(start, key) / (n - 1) : 0.5;
+      return L + ratio * (W - L - R);
+    }
+    function yOf(w) { return T + ((mx - w) / (mx - mn)) * (H - T - B); }
+
+    var s = [];
+    s.push('<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="体重の推移">');
+    s.push('<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#f7b8cd" stop-opacity="0.55"/>' +
+      '<stop offset="100%" stop-color="#f7b8cd" stop-opacity="0"/></linearGradient></defs>');
+
+    // grid
+    for (var g = 0; g <= 2; g++) {
+      var val = mx - ((mx - mn) * g / 2);
+      var gy = yOf(val);
+      s.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#f4e9ee" stroke-width="1"/>');
+      s.push('<text x="' + (L - 6) + '" y="' + (gy + 3.2).toFixed(1) + '" text-anchor="end" font-size="9" fill="#b3a8b0">' + val.toFixed(1) + '</text>');
+    }
+
+    // area
+    var baseY = (H - B).toFixed(1);
+    var areaD = 'M' + xOf(pts[0].k).toFixed(1) + ' ' + baseY;
+    pts.forEach(function (p) { areaD += ' L' + xOf(p.k).toFixed(1) + ' ' + yOf(p.w).toFixed(1); });
+    areaD += ' L' + xOf(pts[pts.length - 1].k).toFixed(1) + ' ' + baseY + ' Z';
+    s.push('<path d="' + areaD + '" fill="url(#areaGrad)"/>');
+
+    // line
+    var lineD = pts.map(function (p, idx) {
+      return (idx === 0 ? 'M' : 'L') + xOf(p.k).toFixed(1) + ' ' + yOf(p.w).toFixed(1);
+    }).join(' ');
+    s.push('<path d="' + lineD + '" fill="none" stroke="#e96a91" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>');
+
+    // dots
+    pts.forEach(function (p, idx) {
+      var isLast = idx === pts.length - 1;
+      s.push('<circle cx="' + xOf(p.k).toFixed(1) + '" cy="' + yOf(p.w).toFixed(1) + '" r="' + (isLast ? 4.6 : 2.8) + '" ' +
+        'fill="#fff" stroke="#e96a91" stroke-width="' + (isLast ? 2.6 : 2) + '"/>');
+    });
+
+    // last value label
+    var last = pts[pts.length - 1];
+
+    // x labels
+    var ticks = [0, Math.round((n - 1) / 3), Math.round((n - 1) * 2 / 3), n - 1];
+    var seen = {};
+    ticks.forEach(function (off, idx) {
+      if (seen[off]) return;
+      seen[off] = true;
+      var key = addDays(start, off);
+      var txp = xOf(key);
+      var ta = idx === 0 ? 'start' : (idx === ticks.length - 1 ? 'end' : 'middle');
+      s.push('<text x="' + txp.toFixed(1) + '" y="' + (H - 8) + '" text-anchor="' + ta + '" font-size="9" fill="#b3a8b0">' + fmtMDshort(key) + '</text>');
+    });
+
+    s.push('</svg>');
+    wrap.innerHTML = s.join('');
+
+    var firstW = pts[0].w;
+    var change = Math.round((last.w - firstW) * 10) / 10;
+    var sign = change > 0 ? '＋' : (change < 0 ? '−' : '±');
+    cap.textContent = '最新 ' + last.w.toFixed(1) + ' kg（' + fmtMDshort(last.k) + '）・期間の変化 ' +
+      sign + Math.abs(change).toFixed(1) + ' kg（' + pts.length + '日分）';
+  }
+
+  /* =========================================================
+     履歴リスト
+  ========================================================= */
+  function renderHistory() {
+    var ul = $('#historyList');
+    var today = todayKey();
+    var rows = [];
+    for (var i = 0; i < 120 && rows.length < 12; i++) {
+      var k = addDays(today, -i);
+      var d = store.days[k];
+      if (hasData(d)) rows.push({ k: k, d: d });
+    }
+    if (!rows.length) {
+      ul.innerHTML = '<li class="history-empty">まだ記録がありません。「今日」タブからどうぞ。</li>';
+      return;
+    }
+    var html = rows.map(function (r) {
+      var d = r.d;
+      var dt = fromKey(r.k);
+      var pills = [];
+      if (typeof d.weight === 'number') pills.push('<span class="pill mint">' + d.weight.toFixed(1) + ' kg</span>');
+      if (d.period.active) {
+        pills.push('<span class="pill pink">生理' + (d.period.flow ? '・' + FLOW_LABELS[d.period.flow] : '') + '</span>');
+      }
+      if (d.bowel.type) {
+        pills.push('<span class="pill amber">便通 ' + BOWEL_LABELS[d.bowel.type] +
+          (d.bowel.count > 1 ? ' ×' + d.bowel.count : '') + '</span>');
+      }
+      var meals = [];
+      MEALS.forEach(function (m) {
+        if (d.meals && d.meals[m] && d.meals[m].trim()) meals.push(MEAL_LABELS[m] + ' ' + d.meals[m].trim());
+      });
+      var sub = meals.length ? meals.join('　') : (d.period.symptoms.length ? '体調：' + d.period.symptoms.join('・') : '');
+      return '<li><button type="button" data-date="' + r.k + '">' +
+        '<span class="hi-date">' + (dt.getMonth() + 1) + '/' + dt.getDate() + '<small>' + WEEK[dt.getDay()] + '曜</small></span>' +
+        '<span class="hi-body"><span class="hi-main">' + pills.join('') + '</span>' +
+        (sub ? '<span class="hi-sub">' + esc(sub) + '</span>' : '') +
+        '</span></button></li>';
+    }).join('');
+    ul.innerHTML = html;
+  }
+
+  /* =========================================================
+     設定
+  ========================================================= */
+  function renderSettings() {
+    var starts = periodStartKeys();
+    var auto = averageCycle(starts);
+    var note = $('#cycleNote');
+    if (store.settings.cycleOverride) {
+      note.textContent = '手動で ' + store.settings.cycleOverride + '日 に固定中（空にすると自動）';
+    } else if (starts.length >= 2) {
+      note.textContent = '記録から自動計算：' + auto + '日';
+    } else {
+      note.textContent = '記録から自動計算します（記録が少ないときは28日）';
+    }
+    $('#cycleInput').value = store.settings.cycleOverride ? String(store.settings.cycleOverride) : '';
+
+    var days = Object.keys(store.days).filter(function (k) { return hasData(store.days[k]); }).length;
+    var info = $('#dataInfo');
+    var savedText = '未保存';
+    if (store.savedAt) {
+      var sd = new Date(store.savedAt);
+      if (!isNaN(sd.getTime())) {
+        savedText = (sd.getMonth() + 1) + '月' + sd.getDate() + '日 ' + pad2(sd.getHours()) + ':' + pad2(sd.getMinutes());
+      }
+    }
+    info.textContent = '記録 ' + days + '日分 ・ 最終保存 ' + savedText;
+  }
+
+  /* =========================================================
+     タブ切り替え
+  ========================================================= */
+  function showView(name) {
+    currentView = name;
+    ['today', 'calendar', 'settings'].forEach(function (v) {
+      var el = $('#view-' + v);
+      if (el) el.hidden = (v !== name);
+    });
+    $all('.tab').forEach(function (t) {
+      t.classList.toggle('on', t.getAttribute('data-view') === name);
+    });
+    if (name === 'calendar') {
+      renderCalendar();
+      renderChart();
+      renderHistory();
+    } else if (name === 'settings') {
+      renderSettings();
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function setDate(k) {
+    if (!isValidKey(k)) return;
+    selectedDate = k;
+    calCursor = k.slice(0, 7) + '-01';
+    startHold = null;
+    loadDayUI();
+  }
+
+  /* =========================================================
+     イベント
+  ========================================================= */
+  function bindEvents() {
+    // タブ
+    $all('.tab').forEach(function (t) {
+      t.addEventListener('click', function () { showView(t.getAttribute('data-view')); });
+    });
+
+    // 日付ナビ
+    $('#prevDay').addEventListener('click', function () { setDate(addDays(selectedDate, -1)); });
+    $('#nextDay').addEventListener('click', function () { setDate(addDays(selectedDate, 1)); });
+    $('#goToday').addEventListener('click', function () { setDate(todayKey()); });
+    $('#datePicker').addEventListener('change', function () {
+      if (this.value) setDate(this.value);
+    });
+
+    // 体重
+    var wi = $('#weightInput');
+    wi.addEventListener('input', function () {
+      var v = this.value.trim();
+      var day = ensureDay(selectedDate);
+      if (v === '') {
+        day.weight = null;
+      } else {
+        var n = parseFloat(v);
+        if (isNaN(n)) {
+          day.weight = null;
+        } else {
+          day.weight = Math.min(300, Math.max(0, Math.round(n * 10) / 10));
+        }
+      }
+      save();
+      renderWeightDelta();
+    });
+    wi.addEventListener('blur', function () {
+      var d = dayFor(selectedDate);
+      if (d && typeof d.weight === 'number') this.value = d.weight.toFixed(1);
+    });
+    $all('[data-step]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var step = parseFloat(btn.getAttribute('data-step'));
+        var day = ensureDay(selectedDate);
+        var base = (typeof day.weight === 'number') ? day.weight : null;
+        if (base === null) {
+          var prev = dayFor(addDays(selectedDate, -1));
+          base = (prev && typeof prev.weight === 'number') ? prev.weight : 50;
+        }
+        var next = Math.round((base + step) * 10) / 10;
+        next = Math.min(300, Math.max(0, next));
+        day.weight = next;
+        wi.value = next.toFixed(1);
+        save();
+        renderWeightDelta();
+      });
+    });
+
+    // 食事
+    $all('textarea[data-meal]').forEach(function (ta) {
+      ta.addEventListener('input', function () {
+        var day = ensureDay(selectedDate);
+        day.meals[this.getAttribute('data-meal')] = this.value;
+        autoGrow(this);
+        save();
+      });
+    });
+    $all('[data-copy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var meal = btn.getAttribute('data-copy');
+        var txt = findPrevMeal(meal, selectedDate);
+        if (!txt) {
+          setSaveState('前回の記録がありません', true);
+          return;
+        }
+        var ta = document.querySelector('textarea[data-meal="' + meal + '"]');
+        var day = ensureDay(selectedDate);
+        day.meals[meal] = txt;
+        ta.value = txt;
+        autoGrow(ta);
+        save();
+      });
+    });
+
+    // 生理
+    $('#periodToggle').addEventListener('change', function () {
+      var day = ensureDay(selectedDate);
+      day.period.active = this.checked;
+      if (!this.checked) day.period.flow = '';
+      save();
+      loadDayUI();
+    });
+    $all('#flowSeg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        var day = ensureDay(selectedDate);
+        var key = b.getAttribute('data-flow');
+        day.period.flow = (day.period.flow === key) ? '' : key;
+        save();
+        loadDayUI();
+      });
+    });
+
+    // 生理が始まった日
+    $('#periodStartBtn').addEventListener('click', function () {
+      setPeriodStart($('#periodStartInput').value);
+    });
+    $('#periodStartInput').addEventListener('input', function () {
+      $('#periodStartBtn').disabled = !isValidKey(this.value);
+    });
+    $('#periodStartInput').addEventListener('change', function () {
+      $('#periodStartBtn').disabled = !isValidKey(this.value);
+    });
+    $('#periodStartInput').addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      var v = this.value;
+      this.blur();
+      setPeriodStart(v);
+    });
+    $('#periodStartChips').addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('button[data-start]') : null;
+      if (!btn) return;
+      clearPeriodStart(btn.getAttribute('data-start'));
+    });
+
+    // 便通
+    $('#bowelGrid').addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.bowel-btn') : null;
+      if (!btn) return;
+      var key = btn.getAttribute('data-type');
+      var day = ensureDay(selectedDate);
+      if (day.bowel.type === key) {
+        day.bowel.type = '';
+      } else {
+        day.bowel.type = key;
+        if (key !== 'none' && (!day.bowel.count || day.bowel.count < 1)) day.bowel.count = 1;
+        if (key === 'none') day.bowel.count = 0;
+      }
+      save();
+      loadDayUI();
+    });
+    $('#bowelPlus').addEventListener('click', function () {
+      var day = ensureDay(selectedDate);
+      if (!day.bowel.type || day.bowel.type === 'none') day.bowel.type = 'normal';
+      day.bowel.count = Math.min(20, (day.bowel.count || 0) + 1);
+      save();
+      loadDayUI();
+    });
+    $('#bowelMinus').addEventListener('click', function () {
+      var day = ensureDay(selectedDate);
+      day.bowel.count = Math.max(0, (day.bowel.count || 0) - 1);
+      save();
+      loadDayUI();
+    });
+    $('#bowelMemo').addEventListener('input', function () {
+      var day = ensureDay(selectedDate);
+      day.bowel.memo = this.value;
+      save();
+    });
+
+    // カレンダー
+    $('#calPrev').addEventListener('click', function () {
+      var p = calCursor.split('-');
+      var d = new Date(Number(p[0]), Number(p[1]) - 2, 1, 12);
+      calCursor = toKey(d);
+      renderCalendar();
+    });
+    $('#calNext').addEventListener('click', function () {
+      var p = calCursor.split('-');
+      var d = new Date(Number(p[0]), Number(p[1]), 1, 12);
+      calCursor = toKey(d);
+      renderCalendar();
+    });
+    $('#calGrid').addEventListener('click', function (e) {
+      var cell = e.target.closest ? e.target.closest('.cal-cell') : null;
+      if (!cell) return;
+      setDate(cell.getAttribute('data-date'));
+      showView('today');
+    });
+    $('#historyList').addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('button[data-date]') : null;
+      if (!btn) return;
+      setDate(btn.getAttribute('data-date'));
+      showView('today');
+    });
+
+    // グラフ期間
+    $all('#rangeSeg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        chartRange = Number(b.getAttribute('data-range'));
+        $all('#rangeSeg button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        renderChart();
+      });
+    });
+
+    // 設定
+    $('#cycleInput').addEventListener('input', function () {
+      var v = this.value.trim();
+      if (v === '') {
+        store.settings.cycleOverride = null;
+      } else {
+        var n = parseInt(v, 10);
+        if (isNaN(n)) { store.settings.cycleOverride = null; }
+        else { store.settings.cycleOverride = Math.min(60, Math.max(15, n)); }
+      }
+      save();
+      renderSettings();
+      renderCycle();
+      if (currentView === 'calendar') renderCalendar();
+    });
+
+    // 書き出し
+    $('#exportBtn').addEventListener('click', function () {
+      var data = {
+        app: 'karada-note',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        settings: { cycleOverride: store.settings.cycleOverride },
+        days: store.days
+      };
+      var text = JSON.stringify(data, null, 2);
+      try {
+        var blob = new Blob([text], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'karada-note-' + todayKey() + '.json';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        window.setTimeout(function () {
+          if (a.parentNode) a.parentNode.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 1500);
+        setSaveState('書き出しました', true);
+      } catch (err) {
+        window.alert('書き出しに失敗しました。ブラウザの共有メニューから保存してみてください。');
+      }
+    });
+
+    // 読み込み
+    $('#importBtn').addEventListener('click', function () {
+      $('#importFile').click();
+    });
+    $('#importFile').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        importText(String(reader.result || ''));
+      };
+      reader.onerror = function () {
+        window.alert('ファイルを読み込めませんでした。');
+      };
+      reader.readAsText(file);
+      this.value = '';
+    });
+
+    // 全削除
+    $('#clearBtn').addEventListener('click', function () {
+      if (!window.confirm('この端末の記録をすべて削除します。元に戻せません。よろしいですか？')) return;
+      if (!window.confirm('本当に削除しますか？（バックアップがなければ復元できません）')) return;
+      store = defaultStore();
+      try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      selectedDate = todayKey();
+      loadDayUI();
+      renderSettings();
+      renderCalendar();
+      renderChart();
+      renderHistory();
+      setSaveState('削除しました', true);
+    });
+  }
+
+  function importText(text) {
+    var obj;
+    try {
+      obj = JSON.parse(text);
+    } catch (e) {
+      window.alert('ファイルを読み込めませんでした（JSON形式ではありません）。');
+      return;
+    }
+    if (!obj || typeof obj !== 'object' || !obj.days || typeof obj.days !== 'object') {
+      window.alert('このアプリのバックアップファイルではないようです。');
+      return;
+    }
+    var keys = Object.keys(obj.days).filter(isValidKey);
+    if (!keys.length) {
+      window.alert('読み込める記録がありませんでした。');
+      return;
+    }
+    if (!window.confirm(keys.length + '日分の記録を読み込みます。同じ日付の記録は上書きされます。よろしいですか？')) return;
+    keys.forEach(function (k) { store.days[k] = normDay(obj.days[k]); });
+    if (obj.settings && typeof obj.settings.cycleOverride === 'number' && isFinite(obj.settings.cycleOverride) &&
+        obj.settings.cycleOverride >= 15 && obj.settings.cycleOverride <= 60) {
+      store.settings.cycleOverride = Math.round(obj.settings.cycleOverride);
+    }
+    save();
+    loadDayUI();
+    renderSettings();
+    renderCalendar();
+    renderChart();
+    renderHistory();
+    window.alert(keys.length + '日分の記録を読み込みました。');
+  }
+
+  /* =========================================================
+     初期化
+  ========================================================= */
+  function buildStaticUI() {
+    // 体調タグ
+    $('#symptomChips').innerHTML = SYMPTOMS.map(function (s) {
+      return '<button type="button" class="chip" data-symptom="' + esc(s) + '">' + esc(s) + '</button>';
+    }).join('');
+    $('#symptomChips').addEventListener('click', function (e) {
+      var chip = e.target.closest ? e.target.closest('.chip') : null;
+      if (!chip) return;
+      var key = chip.getAttribute('data-symptom');
+      var day = ensureDay(selectedDate);
+      var idx = day.period.symptoms.indexOf(key);
+      if (idx >= 0) day.period.symptoms.splice(idx, 1);
+      else day.period.symptoms.push(key);
+      save();
+      chip.classList.toggle('on', day.period.symptoms.indexOf(key) >= 0);
+    });
+
+    // 便通ボタン
+    $('#bowelGrid').innerHTML = BOWELS.map(function (b) {
+      return '<button type="button" class="bowel-btn" data-type="' + b.key + '">' +
+        '<span class="ico' + (b.plain ? ' plain' : '') + '">' + b.icon + '</span>' +
+        '<span class="lb">' + b.label + '</span></button>';
+    }).join('');
+
+    // 今日の日付を初期値に
+    $('#datePicker').value = selectedDate;
+  }
+
+  function init() {
+    buildStaticUI();
+    bindEvents();
+    loadDayUI();
+    renderCalendar();
+    renderChart();
+    renderHistory();
+    renderSettings();
+    setSaveState('この端末に自動保存', false);
+
+    // 日付をまたいでアプリを開き直したとき、今日の日付に追従する
+    var lastToday = todayKey();
+    function refreshDay() {
+      var nowToday = todayKey();
+      if (nowToday === lastToday) return;
+      if (selectedDate === lastToday) setDate(nowToday);
+      lastToday = nowToday;
+      calCursor = selectedDate.slice(0, 7) + '-01';
+      if (currentView === 'calendar') { renderCalendar(); renderChart(); renderHistory(); }
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) refreshDay();
+    });
+    window.addEventListener('focus', refreshDay);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
