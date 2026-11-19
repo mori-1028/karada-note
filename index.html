@@ -153,6 +153,37 @@
   .meal textarea::placeholder{color:#cfc6cc;font-size:13.5px;}
   .meal textarea:focus{outline:none;border-color:#f3c2d2;background:#fff;box-shadow:0 0 0 3px rgba(233,106,145,.08);}
 
+  /* ---------- calories ---------- */
+  .meal-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .meal-main textarea{width:100%;}
+  .kcal-sum{margin:0 0 12px;padding:11px 13px 11px;border-radius:15px;background:linear-gradient(135deg,#fff6f9 0%,#f2fdf8 100%);}
+  .kcal-sum-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+  .kcal-sum-lbl{font-size:11px;font-weight:700;color:#6b5c66;letter-spacing:.04em;}
+  .kcal-sum-num{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .kcal-sum-num b{font-size:19px;font-weight:800;color:var(--pink-deep);margin-right:1px;}
+  .kcal-bar{height:8px;border-radius:999px;background:#eee4e9;overflow:hidden;margin-top:8px;}
+  .kcal-bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#7fd8bb,#3fb894);transition:width .3s ease,background .2s;}
+  .kcal-bar i.over{background:linear-gradient(90deg,#f4a6bd,#e96a91);}
+  .kcal-sum-foot{font-size:11px;color:var(--ink3);margin-top:6px;font-variant-numeric:tabular-nums;}
+  .kcal-sum-foot.over{color:#c94b74;font-weight:700;}
+  .kcal-row{display:flex;align-items:center;gap:6px;min-height:30px;flex-wrap:wrap;}
+  .kcal-est{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .kcal-est b{font-size:12.5px;font-weight:700;color:#6b5c66;}
+  .kcal-row.manual .kcal-est b{color:var(--ink3);font-weight:600;}
+  .kcal-input{
+    width:64px;height:30px;flex:none;border-radius:9px;border:1px solid var(--line);background:#fdfbfc;
+    text-align:right;padding:0 7px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;
+  }
+  .kcal-input:focus{outline:none;border-color:#f3c2d2;background:#fff;box-shadow:0 0 0 3px rgba(233,106,145,.08);}
+  .kcal-input::placeholder{color:#cfc6cc;font-weight:600;font-size:11px;letter-spacing:.02em;}
+  .kcal-unit{font-size:10.5px;color:var(--ink3);font-weight:600;margin-left:-3px;}
+  .kcal-reset{
+    font-size:9.5px;font-weight:700;color:var(--pink-deep);background:var(--pink-soft);
+    border-radius:6px;padding:4px 8px;white-space:nowrap;line-height:1.3;
+  }
+  .kcal-reset:active{background:#ffd0de;}
+  .kcal-warn{font-size:10.5px;color:#a8741c;line-height:1.5;margin-top:-1px;}
+
   /* ---------- advice ---------- */
   .card.advice{background:linear-gradient(158deg,#fffdfe 0%,#f4fdf9 100%);border-color:#e4f4ed;}
   .card.advice h2::before{background:var(--mint);}
@@ -462,22 +493,67 @@
       <div class="card-head">
         <h2>食事</h2>
       </div>
+      <div class="kcal-sum">
+        <div class="kcal-sum-top">
+          <span class="kcal-sum-lbl">今日の合計カロリー</span>
+          <span class="kcal-sum-num"><b id="kcalTotal">0</b> / <span id="kcalTarget">1,700</span> kcal</span>
+        </div>
+        <div class="kcal-bar"><i id="kcalBar"></i></div>
+        <div class="kcal-sum-foot" id="kcalRest"></div>
+      </div>
       <div class="meal">
         <div class="meal-side"><span class="m">朝</span><button class="mini" data-copy="breakfast">前回と同じ</button></div>
-        <textarea data-meal="breakfast" rows="1" placeholder="例：トースト・ヨーグルト・コーヒー"></textarea>
+        <div class="meal-main">
+          <textarea data-meal="breakfast" rows="1" placeholder="例：トースト・ヨーグルト・コーヒー"></textarea>
+          <div class="kcal-row" data-kcalrow="breakfast">
+            <span class="kcal-est" data-kcalest="breakfast">自動 <b>—</b></span>
+            <input class="kcal-input" data-kcal="breakfast" type="text" inputmode="numeric" placeholder="手入力" aria-label="朝のカロリー手入力（kcal）">
+            <span class="kcal-unit">kcal</span>
+            <button type="button" class="kcal-reset" data-kcalreset="breakfast" hidden>自動にもどす</button>
+          </div>
+          <div class="kcal-warn" data-kcalwarn="breakfast" hidden></div>
+        </div>
       </div>
       <div class="meal">
         <div class="meal-side"><span class="m">昼</span><button class="mini" data-copy="lunch">前回と同じ</button></div>
-        <textarea data-meal="lunch" rows="1" placeholder="例：お弁当・サラダ"></textarea>
+        <div class="meal-main">
+          <textarea data-meal="lunch" rows="1" placeholder="例：お弁当・サラダ"></textarea>
+          <div class="kcal-row" data-kcalrow="lunch">
+            <span class="kcal-est" data-kcalest="lunch">自動 <b>—</b></span>
+            <input class="kcal-input" data-kcal="lunch" type="text" inputmode="numeric" placeholder="手入力" aria-label="昼のカロリー手入力（kcal）">
+            <span class="kcal-unit">kcal</span>
+            <button type="button" class="kcal-reset" data-kcalreset="lunch" hidden>自動にもどす</button>
+          </div>
+          <div class="kcal-warn" data-kcalwarn="lunch" hidden></div>
+        </div>
       </div>
       <div class="meal">
         <div class="meal-side"><span class="m">夜</span><button class="mini" data-copy="dinner">前回と同じ</button></div>
-        <textarea data-meal="dinner" rows="1" placeholder="例：魚・味噌汁・ごはん少なめ"></textarea>
+        <div class="meal-main">
+          <textarea data-meal="dinner" rows="1" placeholder="例：魚・味噌汁・ごはん少なめ"></textarea>
+          <div class="kcal-row" data-kcalrow="dinner">
+            <span class="kcal-est" data-kcalest="dinner">自動 <b>—</b></span>
+            <input class="kcal-input" data-kcal="dinner" type="text" inputmode="numeric" placeholder="手入力" aria-label="夜のカロリー手入力（kcal）">
+            <span class="kcal-unit">kcal</span>
+            <button type="button" class="kcal-reset" data-kcalreset="dinner" hidden>自動にもどす</button>
+          </div>
+          <div class="kcal-warn" data-kcalwarn="dinner" hidden></div>
+        </div>
       </div>
       <div class="meal">
         <div class="meal-side"><span class="m">間食</span><button class="mini" data-copy="snack">前回と同じ</button></div>
-        <textarea data-meal="snack" rows="1" placeholder="例：チョコ2粒"></textarea>
+        <div class="meal-main">
+          <textarea data-meal="snack" rows="1" placeholder="例：チョコ2粒"></textarea>
+          <div class="kcal-row" data-kcalrow="snack">
+            <span class="kcal-est" data-kcalest="snack">自動 <b>—</b></span>
+            <input class="kcal-input" data-kcal="snack" type="text" inputmode="numeric" placeholder="手入力" aria-label="間食のカロリー手入力（kcal）">
+            <span class="kcal-unit">kcal</span>
+            <button type="button" class="kcal-reset" data-kcalreset="snack" hidden>自動にもどす</button>
+          </div>
+          <div class="kcal-warn" data-kcalwarn="snack" hidden></div>
+        </div>
       </div>
+      <p class="note">食べたものを書くと、内蔵の食品辞書からざっくり計算します。違うときは kcal 欄に手入力してください（端末内だけで計算します）。</p>
     </section>
 
     <section class="card advice" id="adviceCard">
@@ -583,6 +659,16 @@
         <div class="num-wrap">
           <input type="number" id="cycleInput" inputmode="numeric" min="15" max="60" placeholder="自動" aria-label="平均周期（日）">
           <span>日</span>
+        </div>
+      </div>
+      <div class="setting-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+        <div>
+          <div class="setting-title">1日の目標カロリー</div>
+          <div class="setting-note" id="kcalTargetNote">合計カロリーの目安に使います（初期値 1,700）</div>
+        </div>
+        <div class="num-wrap">
+          <input type="number" id="targetKcalInput" inputmode="numeric" min="800" max="4000" step="50" placeholder="1700" aria-label="1日の目標カロリー（kcal）">
+          <span>kcal</span>
         </div>
       </div>
     </div>
@@ -693,6 +779,7 @@
     return {
       weight: null,
       meals: { breakfast: '', lunch: '', dinner: '', snack: '' },
+      kcal: { breakfast: null, lunch: null, dinner: null, snack: null },
       period: { active: false, flow: '', symptoms: [] },
       bowel: { type: '', count: 0, memo: '' }
     };
@@ -707,6 +794,15 @@
     if (src.meals && typeof src.meals === 'object') {
       MEALS.forEach(function (m) {
         if (typeof src.meals[m] === 'string') d.meals[m] = src.meals[m];
+      });
+    }
+    // カロリーの手入力値（ない日・古いデータは null のまま＝自動計算）
+    if (src.kcal && typeof src.kcal === 'object') {
+      MEALS.forEach(function (m) {
+        var v = src.kcal[m];
+        if (typeof v === 'number' && isFinite(v) && v >= 0 && v <= 5000) {
+          d.kcal[m] = Math.round(v);
+        }
       });
     }
     if (src.period && typeof src.period === 'object') {
@@ -729,7 +825,7 @@
   }
 
   function defaultStore() {
-    return { version: 1, days: {}, settings: { cycleOverride: null }, savedAt: null };
+    return { version: 1, days: {}, settings: { cycleOverride: null, targetKcal: 1700 }, savedAt: null };
   }
 
   function normalizeStore(obj) {
@@ -738,6 +834,8 @@
     if (obj.settings && typeof obj.settings === 'object') {
       var ov = obj.settings.cycleOverride;
       if (typeof ov === 'number' && isFinite(ov) && ov >= 15 && ov <= 60) s.settings.cycleOverride = Math.round(ov);
+      var tk = obj.settings.targetKcal;
+      if (typeof tk === 'number' && isFinite(tk) && tk >= 800 && tk <= 4000) s.settings.targetKcal = Math.round(tk);
     }
     if (obj.days && typeof obj.days === 'object' && Object.prototype.toString.call(obj.days) !== '[object Array]') {
       Object.keys(obj.days).forEach(function (k) {
@@ -774,6 +872,9 @@
 
   function ensureDay(k) {
     if (!store.days[k]) store.days[k] = blankDay();
+    if (!store.days[k].kcal || typeof store.days[k].kcal !== 'object') {
+      store.days[k].kcal = blankDay().kcal;
+    }
     return store.days[k];
   }
 
@@ -799,6 +900,7 @@
     }
     setSaveState('保存しました', true);
     renderAdvice();
+    renderMealKcal();
   }
 
   function setSaveState(text, flash) {
@@ -1122,6 +1224,8 @@
     var weightDiff = weightDiffFor(k);
     var heavy = heavyCheck(mealText, dinnerText, meals.snack, weightDiff);
     var ph = periodPhase(k, d);
+    var kcal = dayKcalTotal(k);
+    var target = targetKcal();
     var anyInput = hasMeals ||
       (d && typeof d.weight === 'number') ||
       (d && d.bowel && (d.bowel.type || d.bowel.memo)) ||
@@ -1137,6 +1241,8 @@
       until: ph.until,
       bowelStreak: bowelNoneStreak(k),
       bowelType: (d && d.bowel && d.bowel.type) ? d.bowel.type : '',
+      kcal: kcal,
+      target: target,
       anyInput: !!anyInput
     };
   }
@@ -1203,6 +1309,23 @@
       });
     }
 
+    if (a.hasMeals && a.kcal > 0) {
+      var over = a.kcal - a.target;
+      if (over > 0) {
+        tips.push({
+          icon: '🍽️', cls: 'warn',
+          text: '今日はだいたい<b>' + a.kcal.toLocaleString('ja-JP') + ' kcal</b>で、目標より約' +
+            over.toLocaleString('ja-JP') + ' kcal 多め。明日は少し軽めに、お水を多めにすると整いやすいです。'
+        });
+      } else if (selectedDate < todayKey() && a.kcal < a.target * 0.7) {
+        tips.push({
+          icon: '🍽️', cls: '',
+          text: '今日はだいたい<b>' + a.kcal.toLocaleString('ja-JP') + ' kcal</b>と少なめ。無理に減らしすぎず、' +
+            'たんぱく質をひとつ足すと◎'
+        });
+      }
+    }
+
     if (a.phase === 'active') {
       tips.push({
         icon: '🩸', cls: 'care',
@@ -1261,6 +1384,529 @@
   }
 
   /* =========================================================
+     カロリーのざっくり見積もり（内蔵の食品辞書）
+     ※ 外部通信なし・この端末の中だけで計算します
+  ========================================================= */
+  var KCAL_DEFAULT_TARGET = 1700;
+
+  var FOODS = [
+    /* ---- ごはん・主食 ---- */
+    { n: 'ごはん', k: 240, pg: 156, w: ['ごはん', 'ご飯', '白米', '白ごはん', '白飯', '米飯', 'ライス', 'めし'] },
+    { n: '玄米ごはん', k: 230, pg: 152, w: ['玄米ごはん', '玄米', '玄米ライス'] },
+    { n: '雑穀ごはん', k: 235, w: ['雑穀ごはん', '雑穀米', '十六穀米', 'もち麦ごはん'] },
+    { n: 'おにぎり', k: 180, w: ['おにぎり', 'おむすび', 'にぎり飯'] },
+    { n: 'おにぎり（具入り）', k: 200, w: ['鮭おにぎり', 'ツナマヨおにぎり', '明太子おにぎり', '昆布おにぎり'] },
+    { n: 'チャーハン', k: 700, w: ['チャーハン', '炒飯', 'やきめし', '焼き飯'] },
+    { n: 'カレーライス', k: 800, w: ['カレーライス', 'かれーらいす'] },
+    { n: 'カレー', k: 650, w: ['カレー', 'かれー', '欧風カレー'] },
+    { n: 'ハヤシライス', k: 750, w: ['ハヤシライス', 'ハヤシ'] },
+    { n: 'オムライス', k: 700, w: ['オムライス', 'おむらいす'] },
+    { n: '牛丼', k: 700, w: ['牛丼', 'ぎゅうどん'] },
+    { n: 'カツ丼', k: 900, w: ['カツ丼', 'かつ丼'] },
+    { n: '親子丼', k: 650, w: ['親子丼', 'おやこ丼'] },
+    { n: '天丼', k: 800, w: ['天丼', 'てんどん'] },
+    { n: '海鮮丼', k: 600, w: ['海鮮丼', 'かいせん丼'] },
+    { n: '中華丼', k: 700, w: ['中華丼', 'ちゅうか丼'] },
+    { n: 'そぼろ丼', k: 600, w: ['そぼろ丼', '三色丼'] },
+    { n: '寿司', k: 500, u: 45, w: ['寿司', 'すし', '鮨', 'にぎり寿司', 'にぎりずし'] },
+    { n: 'ちらし寿司', k: 550, w: ['ちらし寿司', 'ばら寿司'] },
+    { n: '巻き寿司', k: 450, w: ['太巻き', '恵方巻', '巻き寿司', 'のり巻き'] },
+    { n: 'いなり寿司', k: 200, u: 100, w: ['いなり寿司', 'いなり', '稲荷寿司'] },
+    { n: 'パン', k: 180, u: 150, pg: 264, w: ['パン', 'ぱん'] },
+    { n: '食パン', k: 150, u: 150, pg: 264, w: ['食パン', 'しょくぱん', '6枚切'] },
+    { n: 'トースト', k: 160, w: ['トースト', 'とーすと', '焼きパン'] },
+    { n: 'ロールパン', k: 90, w: ['ロールパン', 'バターロール'] },
+    { n: 'クロワッサン', k: 170, w: ['クロワッサン', 'クロワッサン'] },
+    { n: 'ベーグル', k: 270, w: ['ベーグル'] },
+    { n: 'サンドイッチ', k: 330, w: ['サンドイッチ', 'サンドウィッチ', 'サンド'] },
+    { n: 'バゲット', k: 150, w: ['バゲット', 'フランスパン'] },
+    { n: 'ナン', k: 300, w: ['ナン', 'ナーン'] },
+    { n: 'ピザ', k: 250, w: ['ピザ', 'ピッツァ'] },
+    { n: 'ホットケーキ', k: 250, w: ['ホットケーキ', 'パンケーキ', 'ホットケーキミックス'] },
+    { n: 'ワッフル', k: 300, w: ['ワッフル'] },
+    { n: 'ドーナツ', k: 300, w: ['ドーナツ', 'ドーナッツ'] },
+    { n: 'あんぱん', k: 280, w: ['あんぱん', 'あんパン', 'アンパン'] },
+    { n: 'メロンパン', k: 400, w: ['メロンパン'] },
+    { n: 'カレーパン', k: 300, w: ['カレーパン'] },
+    { n: '菓子パン', k: 350, w: ['菓子パン', '甘いパン'] },
+    { n: '惣菜パン', k: 300, w: ['惣菜パン', '総菜パン'] },
+    { n: 'コーンフレーク', k: 150, w: ['コーンフレーク', 'コーンフレークス', 'コーンフレーク'] },
+    { n: 'オートミール', k: 150, w: ['オートミール', 'オーツ麦', 'オーツ'] },
+    { n: 'グラノーラ', k: 200, w: ['グラノーラ', 'フルグラ'] },
+    { n: 'シリアル', k: 150, w: ['シリアル', 'シリアル食品'] },
+    { n: 'おかゆ', k: 100, w: ['おかゆ', 'お粥', '粥', '雑炊', 'ぞうすい'] },
+    { n: '餅', k: 120, u: 120, w: ['餅', 'もち', '切り餅'] },
+    { n: 'お好み焼き', k: 500, w: ['お好み焼き', 'お好み焼', '広島焼き'] },
+    { n: 'たこ焼き', k: 300, u: 50, w: ['たこ焼き', 'たこ焼', '蛸焼き'] },
+
+    /* ---- 麺類 ---- */
+    { n: '焼きそば', k: 550, w: ['焼きそば', '焼そば', 'やきそば'] },
+    { n: '焼うどん', k: 500, w: ['焼うどん', '焼きうどん'] },
+    { n: 'うどん', k: 340, w: ['うどん', '饂飩', 'かけうどん', 'きつねうどん'] },
+    { n: 'そば', k: 320, w: ['そば', '蕎麦', 'ざるそば', 'もりそば'] },
+    { n: 'ラーメン', k: 500, w: ['ラーメン', 'らーめん', '中華そば', '支那そば', '醤油ラーメン', '味噌ラーメン', '塩ラーメン'] },
+    { n: '豚骨ラーメン', k: 600, w: ['豚骨ラーメン', 'とんこつラーメン'] },
+    { n: 'つけ麺', k: 700, w: ['つけ麺', 'つけめん'] },
+    { n: 'パスタ', k: 600, w: ['パスタ', 'スパゲッティ', 'スパゲティ', 'スパゲッティー'] },
+    { n: 'カルボナーラ', k: 750, w: ['カルボナーラ'] },
+    { n: 'ペペロンチーノ', k: 550, w: ['ペペロンチーノ', 'ペペロン'] },
+    { n: 'ミートソースパスタ', k: 650, w: ['ミートソース', 'ボロネーゼ', 'ボロネーズ'] },
+    { n: '冷やし中華', k: 550, w: ['冷やし中華', 'ひやしちゅうか'] },
+    { n: 'そうめん', k: 300, w: ['そうめん', '素麺', 'ひやむぎ', '冷麦'] },
+    { n: 'カップ麺', k: 450, w: ['カップ麺', 'カップラーメン', 'カップヌードル', 'カップめん', 'カップ焼きそば'] },
+    { n: 'インスタントラーメン', k: 450, w: ['インスタントラーメン', 'インスタント麺', '袋ラーメン'] },
+    { n: 'フォー', k: 350, w: ['フォー'] },
+    { n: 'ビーフン', k: 400, w: ['ビーフン', '米粉麺'] },
+    { n: '冷麺', k: 450, w: ['冷麺', 'れいめん', '韓国冷麺'] },
+    { n: 'ビビンバ', k: 600, w: ['ビビンバ', 'ビビンパ'] },
+    { n: 'グラタン', k: 450, w: ['グラタン', 'グラタン'] },
+    { n: 'ドリア', k: 600, w: ['ドリア'] },
+
+    /* ---- 主菜・おかず ---- */
+    { n: '唐揚げ', k: 240, u: 80, w: ['唐揚げ', 'から揚げ', 'からあげ', '空揚げ', '竜田揚げ', 'ザンギ'] },
+    { n: 'とんかつ', k: 450, w: ['とんかつ', 'トンカツ', '豚カツ', 'ヒレカツ', 'ロースカツ'] },
+    { n: 'チキンカツ', k: 400, w: ['チキンカツ', 'チキン南蛮'] },
+    { n: 'エビフライ', k: 180, w: ['エビフライ', 'えびフライ', '海老フライ'] },
+    { n: 'フライ', k: 200, u: 100, w: ['フライ', 'フライド'] },
+    { n: 'コロッケ', k: 150, w: ['コロッケ', 'かぼちゃコロッケ'] },
+    { n: 'メンチカツ', k: 300, w: ['メンチカツ', 'メンチ'] },
+    { n: 'ハンバーグ', k: 300, w: ['ハンバーグ', 'ハンバーグステーキ'] },
+    { n: 'ミートボール', k: 150, w: ['ミートボール', '肉団子'] },
+    { n: '餃子', k: 240, u: 40, w: ['餃子', 'ぎょうざ', 'ギョーザ', '水餃子', '焼き餃子'] },
+    { n: 'シュウマイ', k: 120, u: 40, w: ['シュウマイ', '焼売', 'しゅうまい'] },
+    { n: '焼き鳥', k: 140, u: 70, w: ['焼き鳥', 'やきとり', '焼鳥', '串焼き'] },
+    { n: 'フライドチキン', k: 220, w: ['フライドチキン', 'フライドチキン'] },
+    { n: '天ぷら', k: 250, u: 50, w: ['天ぷら', 'てんぷら', '天婦羅', 'かき揚げ'] },
+    { n: '春巻き', k: 120, w: ['春巻き', 'はるまき'] },
+    { n: 'すき焼き', k: 500, w: ['すき焼き', 'すきやき'] },
+    { n: 'しゃぶしゃぶ', k: 350, w: ['しゃぶしゃぶ', 'シャブシャブ'] },
+    { n: '焼肉', k: 400, w: ['焼肉', 'やきにく', '焼き肉'] },
+    { n: 'ステーキ', k: 350, w: ['ステーキ', 'ビーフステーキ'] },
+    { n: '肉じゃが', k: 300, w: ['肉じゃが', '肉ジャガ'] },
+    { n: '麻婆豆腐', k: 300, w: ['麻婆豆腐', 'マーボー豆腐', 'マーボ豆腐', '麻婆丼'] },
+    { n: '回鍋肉', k: 350, w: ['回鍋肉', 'ホイコーロー'] },
+    { n: '青椒肉絲', k: 300, w: ['青椒肉絲', 'チンジャオロース'] },
+    { n: '酢豚', k: 400, w: ['酢豚', 'すぶた'] },
+    { n: '八宝菜', k: 300, w: ['八宝菜', 'はっぽうさい'] },
+    { n: 'チゲ', k: 300, w: ['チゲ', 'チゲ鍋', 'キムチチゲ', 'スンドゥブ'] },
+    { n: '煮物', k: 150, w: ['煮物', '煮込み', 'にもの'] },
+    { n: '肉豆腐', k: 250, w: ['肉豆腐'] },
+    { n: '鮭', k: 130, pg: 133, w: ['鮭', 'さけ', 'サーモン', 'しゃけ', '塩鮭'] },
+    { n: 'さば', k: 200, pg: 211, w: ['さば', '鯖', 'サバ', '塩さば'] },
+    { n: 'さんま', k: 250, w: ['さんま', '秋刀魚'] },
+    { n: 'ぶり', k: 250, pg: 257, w: ['ぶり', '鰤', 'ブリ'] },
+    { n: 'あじ', k: 120, pg: 126, w: ['あじ', '鯵', 'アジ'] },
+    { n: 'たら', k: 100, pg: 77, w: ['たら', '鱈', 'タラ'] },
+    { n: '焼き魚', k: 150, w: ['焼き魚', '焼魚', 'やきざかな'] },
+    { n: '刺身', k: 150, w: ['刺身', 'さしみ', 'お造り', '造り'] },
+    { n: 'まぐろ', k: 100, pg: 125, w: ['まぐろ', 'マグロ', '鮪', '本マグロ'] },
+    { n: 'ツナ', k: 90, w: ['ツナ', 'ツナ缶', 'シーチキン'] },
+    { n: 'うなぎ', k: 300, w: ['うなぎ', '鰻', 'ウナギ'] },
+    { n: 'しらす', k: 30, w: ['しらす', 'しらす干し', '釜揚げしらす'] },
+    { n: '明太子', k: 40, w: ['明太子', 'たらこ', 'からし明太子'] },
+    { n: 'ちくわ', k: 30, w: ['ちくわ', '竹輪'] },
+    { n: 'かまぼこ', k: 40, w: ['かまぼこ', '蒲鉾', 'はんぺん'] },
+    { n: '卵', k: 80, w: ['卵', 'たまご', '玉子', '鶏卵'] },
+    { n: '目玉焼き', k: 90, w: ['目玉焼き', 'めだまやき', '目玉焼'] },
+    { n: 'ゆで卵', k: 80, w: ['ゆで卵', '茹で卵', '煮卵'] },
+    { n: '卵焼き', k: 120, w: ['卵焼き', '玉子焼き', 'だし巻き卵', 'だし巻き'] },
+    { n: 'オムレツ', k: 250, w: ['オムレツ', 'オムレツ'] },
+    { n: 'スクランブルエッグ', k: 150, w: ['スクランブルエッグ', 'スクランブル卵'] },
+    { n: '納豆', k: 100, w: ['納豆', 'なっとう'] },
+    { n: '豆腐', k: 110, w: ['豆腐', 'とうふ', '木綿豆腐', '絹ごし豆腐', '絹豆腐'] },
+    { n: '冷奴', k: 80, w: ['冷奴', 'ひややっこ'] },
+    { n: '厚揚げ', k: 200, w: ['厚揚げ', 'あつあげ', '生揚げ'] },
+    { n: '油揚げ', k: 50, w: ['油揚げ', 'あぶらあげ', 'きつね'] },
+    { n: '豆乳', k: 90, w: ['豆乳', 'とうにゅう'] },
+    { n: 'ヨーグルト', k: 80, w: ['ヨーグルト', 'ヨーグルト無糖', 'プレーンヨーグルト'] },
+    { n: 'ギリシャヨーグルト', k: 100, w: ['ギリシャヨーグルト', '高たんぱくヨーグルト'] },
+    { n: 'チーズ', k: 80, w: ['チーズ', 'スライスチーズ', 'プロセスチーズ'] },
+    { n: '牛乳', k: 130, w: ['牛乳', 'ミルク', 'ぎゅうにゅう', 'ローファットミルク'] },
+    { n: 'プロテイン', k: 120, w: ['プロテイン', 'プロテインドリンク'] },
+    { n: 'サラダチキン', k: 110, w: ['サラダチキン', '蒸し鶏'] },
+    { n: '鶏むね肉', k: 110, pg: 110, w: ['鶏むね肉', '鶏胸肉', 'むね肉', '鶏むね', '鶏肉'] },
+    { n: '鶏もも肉', k: 190, pg: 190, w: ['鶏もも肉', 'もも肉'] },
+    { n: '豚肉', k: 240, pg: 240, w: ['豚肉', 'ぶた肉', '豚ロース', '豚バラ', '豚こま'] },
+    { n: '牛肉', k: 200, pg: 200, w: ['牛肉', 'ぎゅう肉', '牛こま'] },
+    { n: 'ひき肉', k: 230, pg: 230, w: ['ひき肉', 'ミンチ', '挽肉'] },
+    { n: 'ハム', k: 40, u: 20, w: ['ハム', 'ロースハム'] },
+    { n: 'ベーコン', k: 60, u: 30, w: ['ベーコン'] },
+    { n: 'ウインナー', k: 60, u: 30, w: ['ウインナー', 'ウィンナー', 'ソーセージ'] },
+    { n: 'サラダ', k: 80, w: ['サラダ', 'グリーンサラダ', '野菜サラダ'] },
+    { n: 'シーザーサラダ', k: 250, w: ['シーザーサラダ', 'シーザーサラダ'] },
+    { n: 'ポテトサラダ', k: 200, w: ['ポテトサラダ', 'ポテサラ'] },
+    { n: 'コールスロー', k: 120, w: ['コールスロー'] },
+    { n: '温野菜', k: 60, w: ['温野菜', '蒸し野菜'] },
+    { n: '野菜炒め', k: 150, w: ['野菜炒め', '野菜いため'] },
+    { n: 'おひたし', k: 30, w: ['おひたし', 'お浸し', '浸し'] },
+    { n: 'きんぴら', k: 90, w: ['きんぴら', '金平', 'きんぴらごぼう'] },
+    { n: 'ひじき', k: 20, w: ['ひじき', 'ひじきの煮物', 'ひじき煮'] },
+    { n: '漬物', k: 15, w: ['漬物', 'つけもの', 'ぬか漬け', '浅漬け', 'お新香'] },
+    { n: 'キムチ', k: 25, w: ['キムチ', '白菜キムチ'] },
+    { n: '枝豆', k: 90, w: ['枝豆', 'えだまめ'] },
+    { n: 'アボカド', k: 200, w: ['アボカド', 'アボガド'] },
+    { n: 'トマト', k: 30, w: ['トマト'] },
+    { n: 'ブロッコリー', k: 40, w: ['ブロッコリー', 'ブロッコリ'] },
+    { n: '味噌汁', k: 40, w: ['味噌汁', 'みそ汁', 'お味噌汁', 'みそしる'] },
+    { n: '豚汁', k: 120, w: ['豚汁', 'とん汁', 'とんじる'] },
+    { n: 'コーンスープ', k: 120, w: ['コーンスープ', 'コーンポタージュ'] },
+    { n: 'ミネストローネ', k: 100, w: ['ミネストローネ', 'トマトスープ'] },
+    { n: '野菜スープ', k: 60, w: ['野菜スープ', '野菜コンソメ'] },
+    { n: 'わかめスープ', k: 20, w: ['わかめスープ', 'わかめのお吸い物'] },
+    { n: 'スープ', k: 60, w: ['スープ', 'コンソメスープ', 'お吸い物'] },
+    { n: 'おでん', k: 250, w: ['おでん', '関東煮'] },
+    { n: '茶碗蒸し', k: 100, w: ['茶碗蒸し', 'ちゃわんむし'] },
+
+    /* ---- 果物・いも ---- */
+    { n: 'バナナ', k: 90, w: ['バナナ', 'ばなな'] },
+    { n: 'りんご', k: 80, w: ['りんご', '林檎', 'アップル'] },
+    { n: 'みかん', k: 40, w: ['みかん', '蜜柑', '温州みかん'] },
+    { n: 'オレンジ', k: 60, w: ['オレンジ', 'ネーブル'] },
+    { n: 'いちご', k: 30, w: ['いちご', '苺', 'イチゴ'] },
+    { n: 'キウイ', k: 50, w: ['キウイ', 'キウイフルーツ'] },
+    { n: 'ぶどう', k: 60, w: ['ぶどう', '葡萄', 'マスカット', 'シャインマスカット'] },
+    { n: 'ブルーベリー', k: 50, w: ['ブルーベリー'] },
+    { n: 'さつまいも', k: 130, w: ['さつまいも', 'さつま芋', '薩摩芋', 'さつまいも'] },
+    { n: '焼き芋', k: 180, w: ['焼き芋', '焼きいも', 'やきいも'] },
+    { n: 'じゃがいも', k: 80, w: ['じゃがいも', 'じゃが芋'] },
+    { n: 'アーモンド', k: 90, w: ['アーモンド', 'ナッツ', 'ミックスナッツ'] },
+    { n: 'くるみ', k: 100, w: ['くるみ', '胡桃'] },
+
+    /* ---- 甘いもの・間食 ---- */
+    { n: 'チョコレート', k: 60, u: 30, w: ['チョコレート', 'チョコ', 'チョコレート'] },
+    { n: 'ケーキ', k: 350, w: ['ケーキ', 'ショートケーキ', 'ショコラケーキ'] },
+    { n: 'チーズケーキ', k: 300, w: ['チーズケーキ', 'ベイクドチーズケーキ'] },
+    { n: 'アイス', k: 200, w: ['アイス', 'アイスクリーム', 'アイスバー'] },
+    { n: 'ソフトクリーム', k: 200, w: ['ソフトクリーム', 'ソフトクリーム'] },
+    { n: 'クッキー', k: 150, u: 50, w: ['クッキー', 'クッキー'] },
+    { n: 'ビスケット', k: 50, w: ['ビスケット', 'ビスケット'] },
+    { n: 'プリン', k: 150, w: ['プリン', 'ぷりん'] },
+    { n: 'シュークリーム', k: 200, w: ['シュークリーム', 'シュー'] },
+    { n: '大福', k: 200, w: ['大福', 'だいふく', 'いちご大福'] },
+    { n: 'どら焼き', k: 250, w: ['どら焼き', 'どらやき'] },
+    { n: 'たい焼き', k: 250, w: ['たい焼き', '鯛焼き', 'たいやき'] },
+    { n: 'せんべい', k: 50, w: ['せんべい', '煎餅', 'お煎餅'] },
+    { n: 'ポテトチップス', k: 300, w: ['ポテトチップス', 'ポテチ', 'チップス'] },
+    { n: 'スナック菓子', k: 300, w: ['スナック菓子', 'スナック', 'スナック菓子'] },
+    { n: 'お菓子', k: 200, w: ['お菓子', 'おかし', '菓子'] },
+    { n: '和菓子', k: 150, w: ['和菓子', 'わがし'] },
+    { n: 'ようかん', k: 150, w: ['ようかん', '羊羹'] },
+    { n: 'マカロン', k: 100, w: ['マカロン'] },
+    { n: 'カステラ', k: 200, w: ['カステラ', '長崎カステラ'] },
+    { n: 'グミ', k: 50, w: ['グミ', 'ぐみ'] },
+    { n: 'キャンディ', k: 20, w: ['キャンディ', '飴', 'あめ玉'] },
+    { n: 'パフェ', k: 500, w: ['パフェ'] },
+    { n: 'バームクーヘン', k: 250, w: ['バームクーヘン', 'バウムクーヘン'] },
+    { n: 'プロテインバー', k: 190, w: ['プロテインバー', 'たんぱくバー'] },
+
+    /* ---- 飲みもの ---- */
+    { n: 'コーヒー', k: 5, w: ['コーヒー', '珈琲', 'ブラックコーヒー', 'アイスコーヒー'] },
+    { n: 'カフェラテ', k: 120, w: ['カフェラテ', 'カフェオレ', 'ラテ', 'ソイラテ'] },
+    { n: '紅茶', k: 3, w: ['紅茶', 'アイスティー', 'ストレートティー'] },
+    { n: '緑茶', k: 2, w: ['緑茶', 'お茶', '日本茶', 'ほうじ茶', '麦茶', 'ウーロン茶', '烏龍茶'] },
+    { n: 'ジュース', k: 120, w: ['ジュース', 'フルーツジュース'] },
+    { n: 'オレンジジュース', k: 90, w: ['オレンジジュース', 'オレンジジュース'] },
+    { n: 'コーラ', k: 140, w: ['コーラ', '炭酸飲料'] },
+    { n: 'スポーツドリンク', k: 80, w: ['スポーツドリンク', 'アクエリアス', 'ポカリ'] },
+    { n: 'エナジードリンク', k: 100, w: ['エナジードリンク', '栄養ドリンク'] },
+    { n: 'ビール', k: 140, w: ['ビール', '缶ビール', '生ビール', '発泡酒'] },
+    { n: 'ハイボール', k: 150, w: ['ハイボール', 'ハイボール'] },
+    { n: 'チューハイ', k: 150, w: ['チューハイ', '酎ハイ', 'サワー', 'レモンサワー'] },
+    { n: 'ワイン', k: 120, w: ['ワイン', '赤ワイン', '白ワイン'] },
+    { n: '日本酒', k: 150, w: ['日本酒', '清酒', 'お酒'] },
+    { n: '焼酎', k: 150, w: ['焼酎', 'しょうちゅう'] },
+    { n: '梅酒', k: 200, w: ['梅酒', 'うめしゅ'] },
+
+    /* ---- コンビニ・外食 ---- */
+    { n: '弁当', k: 600, w: ['弁当', 'お弁当', 'コンビニ弁当', '幕の内弁当', 'からあげ弁当'] },
+    { n: '定食', k: 700, w: ['定食', 'ていしょく'] },
+    { n: 'ハンバーガー', k: 450, w: ['ハンバーガー', 'バーガー'] },
+    { n: 'チーズバーガー', k: 500, w: ['チーズバーガー'] },
+    { n: 'フライドポテト', k: 350, w: ['フライドポテト', 'ポテトフライ', 'ポテト'] },
+    { n: 'ナゲット', k: 250, u: 50, w: ['ナゲット', 'チキンナゲット'] },
+    { n: 'ホットドッグ', k: 300, w: ['ホットドッグ', 'ホットドック'] },
+
+    /* ---- 調味料・その他 ---- */
+    { n: 'マヨネーズ', k: 90, w: ['マヨネーズ', 'マヨ'] },
+    { n: 'バター', k: 70, w: ['バター'] },
+    { n: 'ジャム', k: 50, w: ['ジャム'] },
+    { n: 'はちみつ', k: 60, w: ['はちみつ', '蜂蜜'] },
+    { n: 'ドレッシング', k: 60, w: ['ドレッシング'] },
+    { n: '味噌', k: 20, w: ['味噌', 'みそ'] }
+  ];
+
+  // 数量・大きさの言い方（係数）
+  var KCAL_SIZE = [
+    ['大盛り', 1.5], ['大盛', 1.5], ['特盛', 1.8], ['山盛り', 1.6], ['てんこ盛り', 1.8],
+    ['少なめ', 0.7], ['少な目', 0.7], ['軽め', 0.7], ['小盛り', 0.6], ['ミニ', 0.7],
+    ['半分', 0.5], ['ハーフ', 0.5], ['ダブル', 2], ['たっぷり', 1.3],
+    ['ちょっと', 0.6], ['少し', 0.7], ['ひとくち', 0.3], ['ラージ', 1.4],
+    ['Lサイズ', 1.4], ['Mサイズ', 1], ['Sサイズ', 0.7]
+  ];
+
+  // 未判定の判定用に取り除く語・文字
+  var KCAL_STRIP_WORDS = [
+    '大さじ', '小さじ', 'グラム', 'ミリリットル', '人前', 'サイズ', 'くらい', 'ぐらい', '程度',
+    'くらい', '盛り', '付き', 'セット', '入り', '約', '半分', '大盛り', '少なめ', 'たっぷり',
+    'ダブル', 'ハーフ', '一杯', '1杯'
+  ];
+  var KCAL_STRIP_CHARS = '個つ枚杯皿本切貫玉缶尾匹片粒かけ合丁束把山食目人与のをにではもやか、,。・/／～〜()（）「」分半大小';
+
+  // 上の語はカタカナ→ひらがな変換後のテキストと比べるので、同じ変換をかけておく
+  var KCAL_SIZE_N = [];
+  for (var ksn = 0; ksn < KCAL_SIZE.length; ksn++) {
+    KCAL_SIZE_N.push([kcalNorm(KCAL_SIZE[ksn][0]), KCAL_SIZE[ksn][1]]);
+  }
+  var KCAL_STRIP_N = [];
+  for (var ksw = 0; ksw < KCAL_STRIP_WORDS.length; ksw++) {
+    var sw = kcalNorm(KCAL_STRIP_WORDS[ksw]);
+    if (sw) KCAL_STRIP_N.push(sw);
+  }
+  var KCAL_G_RE = /([0-9]+(?:\.[0-9]+)?)(?:g|ぐらむ)/;
+  var KCAL_ML_RE = /[0-9](?:ml|みりりっとる|cc|りっとる)/;
+
+  var FOOD_ALIAS = (function () {
+    var seen = {}, list = [];
+    for (var i = 0; i < FOODS.length; i++) {
+      var f = FOODS[i];
+      var ws = f.w || [f.n];
+      for (var j = 0; j < ws.length; j++) {
+        var a = kcalNorm(ws[j]).replace(/[\s\u3000]+/g, '');
+        if (!a || seen[a]) continue;
+        seen[a] = 1;
+        list.push({ a: a, f: f });
+      }
+    }
+    list.sort(function (x, y) { return y.a.length - x.a.length; });
+    return list;
+  })();
+
+  function kcalNorm(s) {
+    var t = String(s == null ? '' : s);
+    try { t = t.normalize('NFKC'); } catch (e) {}
+    t = t.toLowerCase();
+    var out = '';
+    for (var i = 0; i < t.length; i++) {
+      var c = t.charCodeAt(i);
+      if (c >= 0x30A1 && c <= 0x30F6) out += String.fromCharCode(c - 0x60);
+      else out += t.charAt(i);
+    }
+    return out.replace(/[\s\u3000]+/g, '');
+  }
+
+  var KANJI_NUM = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+
+  var KCAL_COUNTER = '個|つ|枚|杯|皿|本|切れ|貫|玉|パック|袋|缶|尾|匹|片|粒|かけ|人前|食|丁|束|把|合|大さじ|小さじ';
+
+  // 「2個」「3枚」のように数えられる言い方のときだけ数量として読む
+  function kcalCounterCount(t) {
+    var re = new RegExp('([0-9]+(?:\\.[0-9]+)?)(?:' + KCAL_COUNTER + ')');
+    var m = t.match(re);
+    if (m) return parseFloat(m[1]);
+    var re2 = new RegExp('([一二三四五六七八九十])(?:' + KCAL_COUNTER + ')');
+    m = t.match(re2);
+    if (m && KANJI_NUM[m[1]]) return KANJI_NUM[m[1]];
+    return null;
+  }
+
+  function kcalFirstNumber(t) {
+    var m = t.match(/([0-9]+(?:\.[0-9]+)?)/);
+    if (m) return parseFloat(m[1]);
+    for (var i = 0; i < t.length; i++) {
+      if (KANJI_NUM[t.charAt(i)]) return KANJI_NUM[t.charAt(i)];
+    }
+    return null;
+  }
+
+  function kcalSplitMeals(text) {
+    return String(text == null ? '' : text).split(/[、,，。･・\/／\n\r\t;；:：|｜+＋&＆]+|\s+|\u3000+/);
+  }
+
+  function kcalMatchToken(tok) {
+    var t = kcalNorm(tok);
+    if (!t) return null;
+    var n = t.length;
+    var used = [];
+    var items = [];
+    var i, j;
+    for (i = 0; i < n; i++) used[i] = false;
+    for (i = 0; i < n; i++) {
+      if (used[i]) continue;
+      var hit = null;
+      for (j = 0; j < FOOD_ALIAS.length; j++) {
+        var a = FOOD_ALIAS[j].a;
+        if (a.length > n - i) continue;
+        if (t.substr(i, a.length) === a) { hit = FOOD_ALIAS[j]; break; }
+      }
+      if (hit) {
+        for (var q = 0; q < hit.a.length; q++) used[i + q] = true;
+        items.push(hit.f);
+        i += hit.a.length - 1;
+      }
+    }
+
+    // 数量の読み取り
+    var tq = t;
+    for (var s = 0; s < KCAL_SIZE_N.length; s++) {
+      tq = tq.split(KCAL_SIZE_N[s][0]).join('');
+    }
+    tq = tq.replace(/([0-9]+(?:\.[0-9]+)?)倍/g, '');
+    var factor = 1;
+    for (var s2 = 0; s2 < KCAL_SIZE_N.length; s2++) {
+      if (t.indexOf(KCAL_SIZE_N[s2][0]) >= 0) factor *= KCAL_SIZE_N[s2][1];
+    }
+    if (/倍/.test(t)) factor *= 2;
+
+    var vol = KCAL_ML_RE.test(tq) || /[0-9]l/.test(tq);
+    var gm = tq.match(KCAL_G_RE);
+    var grams = (gm && !vol) ? parseFloat(gm[1]) : null;
+    var count = null;
+    if (!vol && !gm) count = kcalCounterCount(tq);
+
+    var kcal = 0;
+    var total = 0;
+    var list = [];
+    for (var m = 0; m < items.length; m++) {
+      var f = items[m];
+      var v;
+      if (grams != null && f.pg) {
+        v = grams / 100 * f.pg;
+      } else {
+        var u = (f.u != null ? f.u : f.k);
+        v = (count != null) ? count * u : f.k;
+        v = v * factor;
+      }
+      v = Math.max(0, Math.round(v));
+      total += v;
+      list.push({ name: f.n, kcal: v });
+    }
+
+    // 辞書に当たらなかった部分
+    var resid = '';
+    for (var p = 0; p < n; p++) if (!used[p]) resid += t.charAt(p);
+    resid = resid.replace(/[0-9.]+/g, '').replace(/[a-z]+/g, '');
+    for (var w2 = 0; w2 < KCAL_STRIP_N.length; w2++) resid = resid.split(KCAL_STRIP_N[w2]).join('');
+    for (var c2 = 0; c2 < KCAL_STRIP_CHARS.length; c2++) resid = resid.split(KCAL_STRIP_CHARS.charAt(c2)).join('');
+    var unknown = null;
+    if (resid.length >= 2) unknown = String(tok).trim();
+    else if (!items.length && /[ぁ-んァ-ヶ一-龠a-z]/.test(t)) unknown = String(tok).trim();
+
+    kcal = total;
+    return { kcal: kcal, items: list, unknown: unknown };
+  }
+
+  function estimateMealKcal(text) {
+    var toks = kcalSplitMeals(text);
+    var total = 0;
+    var unknown = [];
+    for (var i = 0; i < toks.length; i++) {
+      var r = kcalMatchToken(toks[i]);
+      if (!r) continue;
+      total += r.kcal;
+      if (r.unknown && unknown.indexOf(r.unknown) < 0) unknown.push(r.unknown);
+    }
+    return { kcal: total, unknown: unknown };
+  }
+
+  function manualKcal(k, meal) {
+    var d = dayFor(k);
+    if (d && d.kcal && typeof d.kcal[meal] === 'number') return d.kcal[meal];
+    return null;
+  }
+
+  function mealKcal(k, meal) {
+    var man = manualKcal(k, meal);
+    var d = dayFor(k);
+    var text = (d && d.meals && typeof d.meals[meal] === 'string') ? d.meals[meal] : '';
+    var est = estimateMealKcal(text);
+    return {
+      auto: man == null,
+      value: (man == null ? est.kcal : man),
+      est: est.kcal,
+      unknown: est.unknown
+    };
+  }
+
+  function dayKcalTotal(k) {
+    var total = 0;
+    for (var i = 0; i < MEALS.length; i++) total += mealKcal(k, MEALS[i]).value;
+    return total;
+  }
+
+  function targetKcal() {
+    var t = store.settings && store.settings.targetKcal;
+    return (typeof t === 'number' && isFinite(t)) ? t : KCAL_DEFAULT_TARGET;
+  }
+
+  function renderMealKcal() {
+    var day = dayFor(selectedDate);
+    MEALS.forEach(function (m) {
+      var info = mealKcal(selectedDate, m);
+      var text = (day && day.meals && typeof day.meals[m] === 'string') ? day.meals[m].trim() : '';
+      var estEl = document.querySelector('[data-kcalest="' + m + '"]');
+      var inp = document.querySelector('input[data-kcal="' + m + '"]');
+      var row = document.querySelector('[data-kcalrow="' + m + '"]');
+      var warn = document.querySelector('[data-kcalwarn="' + m + '"]');
+      if (estEl) {
+        estEl.innerHTML = text
+          ? '自動 <b>' + info.est + '</b> kcal'
+          : '自動 <b>—</b>';
+      }
+      if (inp) {
+        var cur = document.activeElement === inp ? inp.value : null;
+        var man = manualKcal(selectedDate, m);
+        if (cur === null) inp.value = (man == null ? '' : String(man));
+        inp.placeholder = (man == null ? '手入力' : '');
+      }
+      if (row) row.classList.toggle('manual', !info.auto);
+      var btn = document.querySelector('[data-kcalreset="' + m + '"]');
+      if (btn) btn.hidden = info.auto;
+      if (warn) {
+        if (info.unknown && info.unknown.length) {
+          warn.hidden = false;
+          warn.textContent = '未判定：' + info.unknown.slice(0, 3).join('・') +
+            (info.unknown.length > 3 ? ' ほか' : '') + '（手入力で調整できます）';
+        } else {
+          warn.hidden = true;
+          warn.textContent = '';
+        }
+      }
+    });
+    renderKcalSummary();
+  }
+
+  function renderKcalSummary() {
+    var tEl = $('#kcalTotal');
+    if (!tEl) return;
+    var target = targetKcal();
+    var total = dayKcalTotal(selectedDate);
+    var gEl = $('#kcalTarget');
+    var bar = $('#kcalBar');
+    var rest = $('#kcalRest');
+    tEl.textContent = total.toLocaleString('ja-JP');
+    if (gEl) gEl.textContent = Number(target).toLocaleString('ja-JP');
+    var pct = target > 0 ? (total / target) * 100 : 0;
+    if (bar) {
+      bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+      bar.classList.toggle('over', total > target);
+    }
+    if (rest) {
+      var diff = total - target;
+      if (total <= 0) {
+        rest.textContent = '食べたものを入れると、ざっくり計算します（目標 ' +
+          Number(target).toLocaleString('ja-JP') + ' kcal）';
+        rest.className = 'kcal-sum-foot';
+      } else if (diff > 0) {
+        rest.textContent = '目標より ' + diff.toLocaleString('ja-JP') + ' kcal 多め';
+        rest.className = 'kcal-sum-foot over';
+      } else {
+        rest.textContent = '目標まで あと ' + Math.abs(diff).toLocaleString('ja-JP') + ' kcal';
+        rest.className = 'kcal-sum-foot';
+      }
+    }
+  }
+
+  /* =========================================================
      今日タブ：描画
   ========================================================= */
   function loadDayUI() {
@@ -1284,6 +1930,7 @@
       ta.value = d ? (d.meals[m] || '') : '';
       autoGrow(ta);
     });
+    renderMealKcal();
 
     // 生理
     var p = d ? d.period : blankDay().period;
@@ -1626,6 +2273,8 @@
         pills.push('<span class="pill amber">便通 ' + BOWEL_LABELS[d.bowel.type] +
           (d.bowel.count > 1 ? ' ×' + d.bowel.count : '') + '</span>');
       }
+      var dk = dayKcalTotal(r.k);
+      if (dk > 0) pills.push('<span class="pill">' + dk.toLocaleString('ja-JP') + ' kcal</span>');
       var meals = [];
       MEALS.forEach(function (m) {
         if (d.meals && d.meals[m] && d.meals[m].trim()) meals.push(MEAL_LABELS[m] + ' ' + d.meals[m].trim());
@@ -1655,6 +2304,12 @@
       note.textContent = '記録から自動計算します（記録が少ないときは28日）';
     }
     $('#cycleInput').value = store.settings.cycleOverride ? String(store.settings.cycleOverride) : '';
+    var tki = $('#targetKcalInput');
+    if (tki) {
+      if (document.activeElement !== tki) tki.value = String(targetKcal());
+      var tkn = $('#kcalTargetNote');
+      if (tkn) tkn.textContent = '合計カロリーの目安に使用中：' + targetKcal().toLocaleString('ja-JP') + ' kcal';
+    }
 
     var days = Object.keys(store.days).filter(function (k) { return hasData(store.days[k]); }).length;
     var info = $('#dataInfo');
@@ -1778,6 +2433,36 @@
         ta.value = txt;
         autoGrow(ta);
         save();
+      });
+    });
+
+    // カロリーの手入力・自動にもどす
+    $all('input[data-kcal]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var meal = this.getAttribute('data-kcal');
+        var day = ensureDay(selectedDate);
+        var v = this.value.replace(/[^0-9]/g, '');
+        if (v === '') {
+          day.kcal[meal] = null;
+        } else {
+          day.kcal[meal] = Math.min(5000, parseInt(v, 10));
+        }
+        save();
+      });
+      inp.addEventListener('blur', function () {
+        var meal = this.getAttribute('data-kcal');
+        var man = manualKcal(selectedDate, meal);
+        this.value = (man == null ? '' : String(man));
+      });
+    });
+    $all('[data-kcalreset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var meal = btn.getAttribute('data-kcalreset');
+        var day = ensureDay(selectedDate);
+        day.kcal[meal] = null;
+        save();
+        var inp = document.querySelector('input[data-kcal="' + meal + '"]');
+        if (inp) inp.value = '';
       });
     });
 
@@ -1908,6 +2593,23 @@
       renderCycle();
       if (currentView === 'calendar') renderCalendar();
     });
+    $('#targetKcalInput').addEventListener('input', function () {
+      var v = this.value.trim();
+      if (v === '') {
+        store.settings.targetKcal = KCAL_DEFAULT_TARGET;
+      } else {
+        var n = parseInt(v, 10);
+        if (isNaN(n)) { store.settings.targetKcal = KCAL_DEFAULT_TARGET; }
+        else { store.settings.targetKcal = Math.min(4000, Math.max(800, n)); }
+      }
+      save();
+      renderKcalSummary();
+      var tkn = $('#kcalTargetNote');
+      if (tkn) tkn.textContent = '合計カロリーの目安に使用中：' + targetKcal().toLocaleString('ja-JP') + ' kcal';
+    });
+    $('#targetKcalInput').addEventListener('blur', function () {
+      this.value = String(targetKcal());
+    });
 
     // 書き出し
     $('#exportBtn').addEventListener('click', function () {
@@ -1915,7 +2617,7 @@
         app: 'karada-note',
         version: 1,
         exportedAt: new Date().toISOString(),
-        settings: { cycleOverride: store.settings.cycleOverride },
+        settings: { cycleOverride: store.settings.cycleOverride, targetKcal: targetKcal() },
         days: store.days
       };
       var text = JSON.stringify(data, null, 2);
@@ -1994,6 +2696,10 @@
     if (obj.settings && typeof obj.settings.cycleOverride === 'number' && isFinite(obj.settings.cycleOverride) &&
         obj.settings.cycleOverride >= 15 && obj.settings.cycleOverride <= 60) {
       store.settings.cycleOverride = Math.round(obj.settings.cycleOverride);
+    }
+    if (obj.settings && typeof obj.settings.targetKcal === 'number' && isFinite(obj.settings.targetKcal) &&
+        obj.settings.targetKcal >= 800 && obj.settings.targetKcal <= 4000) {
+      store.settings.targetKcal = Math.round(obj.settings.targetKcal);
     }
     save();
     loadDayUI();
